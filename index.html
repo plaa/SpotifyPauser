@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spotify Pauser</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --panel: #161922;
+        --text: #e8ecf1;
+        --muted: #a7b0bd;
+        --accent: #1db954;
+        --danger: #ff5c70;
+        --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      }
+
+      html, body {
+        height: 100%;
+        margin: 0;
+        background: radial-gradient(1200px 600px at 70% -20%, #1a2030, var(--bg));
+        color: var(--text);
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .container {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 28px 18px 60px;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 22px;
+      }
+
+      .cover {
+        width: 64px;
+        height: 64px;
+        border-radius: 8px;
+        background: #23293a;
+        box-shadow: var(--shadow);
+        object-fit: cover;
+      }
+
+      .titles {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .now-title {
+        font-weight: 700;
+        font-size: 18px;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .now-subtitle {
+        color: var(--muted);
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .panel {
+        background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        align-items: center;
+        justify-items: center;
+        text-align: center;
+      }
+
+      .big-btn {
+        display: inline-grid;
+        place-items: center;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        font-size: 44px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        color: #09110c;
+        background: radial-gradient(400px 200px at 50% -10%, #4ee07e, var(--accent));
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 20px 50px rgba(29,185,84,0.35), inset 0 2px 10px rgba(255,255,255,0.25);
+        outline: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 120ms ease, filter 120ms ease;
+      }
+      .big-btn:active { transform: translateY(2px) scale(0.99); filter: brightness(0.98); }
+      .big-sub {
+        font-size: 18px;
+        font-weight: 700;
+        margin-top: 8px;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        width: 100%;
+      }
+
+      .field {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: center;
+      }
+      .field label { color: var(--muted); font-weight: 600; }
+      .field input[type="number"] {
+        width: 96px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: #0e1320;
+        color: var(--text);
+        font-weight: 700;
+        text-align: center;
+      }
+      .field input[type="checkbox"] { transform: scale(1.2); }
+
+      .hint { color: var(--muted); font-size: 13px; text-align: center; }
+      .status { text-align: center; color: var(--muted); margin-top: 10px; min-height: 20px; }
+      .error { color: var(--danger); }
+
+      .auth {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin: 20px 0 10px;
+      }
+      .btn {
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: #0e1320;
+        color: var(--text);
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .btn.accent { background: var(--accent); color: #09110c; border: none; }
+
+      .upnext { text-align: center; margin-top: 8px; color: var(--muted); }
+
+      footer { text-align: center; margin-top: 36px; color: var(--muted); font-size: 12px; }
+      a { color: var(--accent); text-decoration: none; }
+
+      @media (max-width: 420px) {
+        .big-btn { width: 180px; height: 180px; font-size: 36px; }
+        .big-sub { font-size: 16px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <img id="cover" class="cover" alt="cover" />
+        <div class="titles">
+          <div id="nowTitle" class="now-title">Not playing</div>
+          <div id="nowSubtitle" class="now-subtitle">—</div>
+        </div>
+      </header>
+
+      <div class="panel controls">
+        <button id="toggleBtn" class="big-btn" title="Play/Pause">▶</button>
+        <div id="bigSub" class="big-sub">Ready</div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="delay">Delay between songs</label>
+            <input id="delay" type="number" min="0" step="1" value="5" />
+            <span>sec</span>
+          </div>
+          <div class="field">
+            <input id="permanent" type="checkbox" />
+            <label for="permanent">Pause permanently</label>
+          </div>
+        </div>
+
+        <div id="upnext" class="upnext"></div>
+        <div id="status" class="status"></div>
+        <div class="auth">
+          <button id="loginBtn" class="btn accent">Connect to Spotify</button>
+          <button id="logoutBtn" class="btn" style="display:none">Sign out</button>
+        </div>
+      </div>
+
+      <footer>
+        This page uses Spotify Web API. Ensure your app’s Redirect URI is set to this URL: <code id="redir"></code>
+      </footer>
+    </div>
+
+    <script>
+      // ----- Config -----
+      const CLIENT_ID = '097723079f8d4901b97bba1cb7aa0fb9';
+      const REDIRECT_URI = window.location.origin + window.location.pathname;
+      const SCOPES = [
+        'user-read-playback-state',
+        'user-modify-playback-state',
+        'user-read-currently-playing'
+      ];
+
+      // ----- State -----
+      const els = {
+        cover: document.getElementById('cover'),
+        nowTitle: document.getElementById('nowTitle'),
+        nowSubtitle: document.getElementById('nowSubtitle'),
+        toggleBtn: document.getElementById('toggleBtn'),
+        bigSub: document.getElementById('bigSub'),
+        delay: document.getElementById('delay'),
+        permanent: document.getElementById('permanent'),
+        upnext: document.getElementById('upnext'),
+        status: document.getElementById('status'),
+        loginBtn: document.getElementById('loginBtn'),
+        logoutBtn: document.getElementById('logoutBtn'),
+        redir: document.getElementById('redir')
+      };
+
+      els.redir.textContent = REDIRECT_URI;
+
+      let token = null; // { access_token, refresh_token, expires_at }
+      let refreshTimer = null;
+      let pollTimer = null;
+      let pauseScheduleTimer = null;
+      let countdownTimer = null;
+      let inBetweenPause = false;
+      let resumeAt = null;
+
+      // ----- Utils -----
+      const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+      function msToClock(ms) {
+        const s = Math.max(0, Math.floor(ms / 1000));
+        const m = Math.floor(s / 60);
+        const ss = String(s % 60).padStart(2, '0');
+        return `${m}:${ss}`;
+      }
+      function artistsToString(artists) { return (artists || []).map(a => a.name).join(', '); }
+      function saveToken(t) {
+        token = t;
+        localStorage.setItem('sp_token', JSON.stringify(t));
+        els.logoutBtn.style.display = 'inline-block';
+        els.loginBtn.style.display = 'none';
+      }
+      function loadToken() {
+        const raw = localStorage.getItem('sp_token');
+        if (!raw) return null;
+        try { return JSON.parse(raw); } catch { return null; }
+      }
+
+      // ----- PKCE Auth -----
+      function base64url(uint8Arr) {
+        let str = btoa(String.fromCharCode(...new Uint8Array(uint8Arr)));
+        return str.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/,'');
+      }
+      function randomString(len = 64) {
+        const bytes = new Uint8Array(len);
+        crypto.getRandomValues(bytes);
+        return Array.from(bytes).map(b => ('0'+b.toString(16)).slice(-2)).join('');
+      }
+      async function sha256(str) {
+        const enc = new TextEncoder();
+        const data = enc.encode(str);
+        return await crypto.subtle.digest('SHA-256', data);
+      }
+      async function startAuth() {
+        const codeVerifier = randomString(64);
+        const codeChallenge = base64url(await sha256(codeVerifier));
+        const state = randomString(16);
+        sessionStorage.setItem('sp_code_verifier', codeVerifier);
+        sessionStorage.setItem('sp_state', state);
+        const params = new URLSearchParams({
+          client_id: CLIENT_ID,
+          response_type: 'code',
+          redirect_uri: REDIRECT_URI,
+          code_challenge_method: 'S256',
+          code_challenge: codeChallenge,
+          scope: SCOPES.join(' '),
+          state
+        });
+        window.location.assign(`https://accounts.spotify.com/authorize?${params}`);
+      }
+      async function exchangeCodeForToken(code) {
+        const code_verifier = sessionStorage.getItem('sp_code_verifier');
+        const stateExpected = sessionStorage.getItem('sp_state');
+        const stateReceived = new URL(window.location.href).searchParams.get('state');
+        if (stateExpected && stateReceived && stateExpected !== stateReceived) throw new Error('Invalid state');
+        const body = new URLSearchParams({
+          client_id: CLIENT_ID,
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: REDIRECT_URI,
+          code_verifier
+        });
+        const res = await fetch('https://accounts.spotify.com/api/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body
+        });
+        if (!res.ok) throw new Error('Token exchange failed');
+        const data = await res.json();
+        const expires_at = Date.now() + (data.expires_in - 10) * 1000; // safety buffer
+        saveToken({ access_token: data.access_token, refresh_token: data.refresh_token, expires_at });
+        scheduleRefresh();
+      }
+      async function refreshToken() {
+        if (!token?.refresh_token) return;
+        const body = new URLSearchParams({
+          client_id: CLIENT_ID,
+          grant_type: 'refresh_token',
+          refresh_token: token.refresh_token,
+        });
+        const res = await fetch('https://accounts.spotify.com/api/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body
+        });
+        if (!res.ok) {
+          setStatus('Token refresh failed. Please connect again.', true);
+          return;
+        }
+        const data = await res.json();
+        const expires_at = Date.now() + (data.expires_in - 10) * 1000;
+        const refresh_token = data.refresh_token || token.refresh_token; // sometimes not returned
+        saveToken({ access_token: data.access_token, refresh_token, expires_at });
+        scheduleRefresh();
+      }
+      function scheduleRefresh() {
+        if (!token) return;
+        if (refreshTimer) clearTimeout(refreshTimer);
+        const ms = Math.max(5_000, token.expires_at - Date.now() - 60_000); // 1 min prior
+        refreshTimer = setTimeout(refreshToken, ms);
+      }
+      async function getAccessToken() {
+        if (!token) return null;
+        if (Date.now() > (token.expires_at - 60_000)) {
+          await refreshToken();
+        }
+        return token?.access_token || null;
+      }
+
+      // ----- Spotify API helpers -----
+      async function apiFetch(path, options = {}) {
+        const at = await getAccessToken();
+        if (!at) throw new Error('Not authorized');
+        const res = await fetch(`https://api.spotify.com/v1${path}`, {
+          ...options,
+          headers: { 'Authorization': `Bearer ${at}`, 'Content-Type': 'application/json', ...(options.headers||{}) }
+        });
+        if (res.status === 204) return null;
+        if (!res.ok) throw new Error(`API ${res.status}`);
+        return res.json();
+      }
+      async function getPlayback() { return apiFetch('/me/player'); }
+      async function pausePlayback() { try { await apiFetch('/me/player/pause', { method: 'PUT' }); } catch (e) { /* ignore */ } }
+      async function startPlayback() { try { await apiFetch('/me/player/play', { method: 'PUT' }); } catch (e) { /* ignore */ } }
+      async function getQueue() { return apiFetch('/me/player/queue'); }
+
+      // ----- UI / State handling -----
+      function setStatus(msg, isErr = false) {
+        els.status.textContent = msg || '';
+        els.status.classList.toggle('error', !!isErr);
+      }
+      function setBigButton(content, sub) {
+        els.toggleBtn.textContent = content;
+        els.bigSub.textContent = sub || '';
+      }
+      function setUpcoming(text) {
+        els.upnext.textContent = text || '';
+      }
+      function setNowPlaying(item, progress_ms, is_playing) {
+        if (!item) {
+          els.cover.src = '';
+          els.cover.style.visibility = 'hidden';
+          els.nowTitle.textContent = 'Not playing';
+          els.nowSubtitle.textContent = '—';
+          return;
+        }
+        els.cover.style.visibility = 'visible';
+        const art = item.album?.images?.[1]?.url || item.album?.images?.[0]?.url;
+        els.cover.src = art || '';
+        els.nowTitle.textContent = item.name || 'Unknown';
+        const remain = item.duration_ms - (progress_ms || 0);
+        const artists = artistsToString(item.artists);
+        els.nowSubtitle.textContent = `${artists} • ${msToClock(item.duration_ms)} • ${is_playing ? '▶' : '⏸'} ${msToClock(remain)} left`;
+      }
+
+      function getDelaySec() {
+        const n = parseInt(els.delay.value, 10);
+        return Number.isFinite(n) && n >= 0 ? n : 0;
+      }
+
+      function startCountdown() {
+        stopCountdown();
+        countdownTimer = setInterval(() => {
+          if (!inBetweenPause) return stopCountdown();
+          if (els.permanent.checked) {
+            setBigButton('⏸', 'Paused');
+            return;
+          }
+          const ms = Math.max(0, (resumeAt || 0) - Date.now());
+          const s = Math.ceil(ms / 1000);
+          setBigButton(`▶ ${s}s`, 'Resuming soon');
+          if (ms <= 0) stopCountdown();
+        }, 200);
+      }
+      function stopCountdown() {
+        if (countdownTimer) clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
+
+      function clearPauseSchedule() { if (pauseScheduleTimer) clearTimeout(pauseScheduleTimer); pauseScheduleTimer = null; }
+
+      async function schedulePauseIfNeeded(playback) {
+        clearPauseSchedule();
+        const item = playback?.item;
+        const progress = playback?.progress_ms ?? 0;
+        const duration = item?.duration_ms ?? 0;
+        const remaining = Math.max(0, duration - progress);
+        if (!item || !playback?.is_playing) return;
+
+        // If remaining time is short, plan a precise pause just before the track ends.
+        if (remaining <= 15_000) {
+          const triggerIn = Math.max(120, remaining - 700); // try ~0.7s before end
+          pauseScheduleTimer = setTimeout(async () => {
+            try {
+              await pausePlayback();
+              inBetweenPause = true;
+              if (!els.permanent.checked) {
+                resumeAt = Date.now() + getDelaySec() * 1000;
+              } else {
+                resumeAt = null;
+              }
+              startCountdown();
+              await updateUpcoming();
+            } catch (e) {
+              // ignore
+            }
+          }, triggerIn);
+        }
+      }
+
+      async function updateUpcoming() {
+        try {
+          const q = await getQueue();
+          const nxt = q?.queue?.[0];
+          if (nxt) {
+            setUpcoming(`Up next: ${nxt.name} — ${artistsToString(nxt.artists)}`);
+          } else {
+            setUpcoming('');
+          }
+        } catch {
+          setUpcoming('');
+        }
+      }
+
+      async function pollOnce() {
+        if (!token) return;
+        try {
+          const playback = await getPlayback();
+          if (!playback) {
+            setStatus('No active device. Start Spotify on a device.');
+            setNowPlaying(null);
+            setBigButton('▶', 'Ready');
+            inBetweenPause = false;
+            stopCountdown();
+            return 15_000;
+          }
+
+          const { is_playing, item, progress_ms } = playback;
+          setNowPlaying(item, progress_ms, is_playing);
+
+          if (is_playing) {
+            // Normal play: ensure UI shows Pause icon
+            setBigButton('⏸', 'Playing');
+            inBetweenPause = false;
+            stopCountdown();
+            await schedulePauseIfNeeded(playback);
+          } else {
+            // Paused. If we're in between songs (we paused), handle resume.
+            if (inBetweenPause) {
+              if (!els.permanent.checked && resumeAt && Date.now() >= resumeAt) {
+                await startPlayback();
+                inBetweenPause = false;
+                stopCountdown();
+                setBigButton('⏸', 'Playing');
+              } else {
+                startCountdown();
+                await updateUpcoming();
+              }
+            } else {
+              // User manually paused; reflect state.
+              setBigButton('▶', 'Paused');
+            }
+          }
+
+          const duration = item?.duration_ms ?? 0;
+          const remaining = Math.max(0, duration - (progress_ms ?? 0));
+          if (is_playing && remaining < 15_000) return 5_000; // tighten polling
+          return 15_000;
+        } catch (e) {
+          setStatus('Playback check failed. Retrying…');
+          return 15_000;
+        }
+      }
+
+      async function pollLoop() {
+        if (pollTimer) clearTimeout(pollTimer);
+        const nextIn = await pollOnce();
+        pollTimer = setTimeout(pollLoop, nextIn);
+      }
+
+      // ----- Events -----
+      els.loginBtn.addEventListener('click', startAuth);
+      els.logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('sp_token');
+        token = null;
+        if (refreshTimer) clearTimeout(refreshTimer);
+        if (pollTimer) clearTimeout(pollTimer);
+        clearPauseSchedule();
+        stopCountdown();
+        setStatus('Signed out.');
+        els.loginBtn.style.display = 'inline-block';
+        els.logoutBtn.style.display = 'none';
+        setBigButton('▶', 'Ready');
+      });
+      els.permanent.addEventListener('change', () => {
+        els.delay.disabled = els.permanent.checked;
+      });
+      els.toggleBtn.addEventListener('click', async () => {
+        try {
+          const playback = await getPlayback();
+          if (!playback) return;
+          if (inBetweenPause) {
+            // If in scheduled pause, act as immediate resume
+            await startPlayback();
+            inBetweenPause = false;
+            stopCountdown();
+            setBigButton('⏸', 'Playing');
+            return;
+          }
+          if (playback.is_playing) {
+            await pausePlayback();
+            setBigButton('▶', 'Paused');
+          } else {
+            await startPlayback();
+            setBigButton('⏸', 'Playing');
+          }
+        } catch (e) {
+          setStatus('Action failed. Ensure Spotify is open.', true);
+        }
+      });
+
+      // ----- Init -----
+      (async function init() {
+        // Handle auth redirect
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const error = params.get('error');
+        if (error) {
+          setStatus('Authorization failed: ' + error, true);
+        }
+        if (code) {
+          try {
+            await exchangeCodeForToken(code);
+            // Cleanup URL
+            history.replaceState({}, document.title, REDIRECT_URI);
+          } catch (e) {
+            setStatus('Token exchange failed.', true);
+          }
+        } else {
+          // Load any existing token
+          const saved = loadToken();
+          if (saved) {
+            saveToken(saved);
+            scheduleRefresh();
+          }
+        }
+
+        if (token) {
+          setStatus('Connected.');
+          pollLoop();
+        } else {
+          setStatus('Connect to Spotify to begin.');
+          els.loginBtn.style.display = 'inline-block';
+          els.logoutBtn.style.display = 'none';
+        }
+      })();
+    </script>
+  </body>
+</html>
