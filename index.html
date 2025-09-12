@@ -409,6 +409,11 @@
         return Number.isFinite(n) && n >= 0 ? n : 0;
       }
 
+      function schedulePollIn(ms) {
+        if (pollTimer) clearTimeout(pollTimer);
+        pollTimer = setTimeout(pollLoop, ms);
+      }
+
       async function resumePlaybackNow() {
         try {
           await startPlayback();
@@ -416,9 +421,8 @@
           inBetweenPause = false;
           stopCountdown();
           setBigButton('⏸', 'Playing');
-          // Restart polling immediately to reflect state without delay
-          if (pollTimer) clearTimeout(pollTimer);
-          pollLoop();
+          // Schedule a quick poll to refresh UI/state shortly after resume
+          schedulePollIn(1000);
         }
       }
 
@@ -467,6 +471,8 @@
               }
               startCountdown();
               await updateUpcoming();
+              // Refresh state shortly after pausing
+              schedulePollIn(1000);
             } catch (e) {
               // ignore
             }
@@ -498,7 +504,7 @@
             setBigButton('▶', 'Ready');
             inBetweenPause = false;
             stopCountdown();
-            return 15_000;
+            return 5_000;
           }
 
           const { is_playing, item, progress_ms } = playback;
@@ -522,18 +528,11 @@
             }
           }
 
-          const duration = item?.duration_ms ?? 0;
-          const remaining = Math.max(0, duration - (progress_ms ?? 0));
-          if (is_playing && remaining < 15_000) return 5_000; // tighten polling
-          if (!is_playing && inBetweenPause && !els.permanent.checked) {
-            // While waiting to resume, poll closer to the resume moment
-            const ms = Math.max(200, (resumeAt || Date.now()) - Date.now());
-            return Math.min(1_000, ms);
-          }
-          return 15_000;
+          // Fixed-interval polling
+          return 5_000;
         } catch (e) {
           setStatus('Playback check failed. Retrying…');
-          return 15_000;
+          return 5_000;
         }
       }
 
@@ -570,6 +569,7 @@
             inBetweenPause = false;
             stopCountdown();
             setBigButton('⏸', 'Playing');
+            schedulePollIn(1000);
             return;
           }
           if (playback.is_playing) {
@@ -579,6 +579,7 @@
             await startPlayback();
             setBigButton('⏸', 'Playing');
           }
+          schedulePollIn(1000);
         } catch (e) {
           setStatus('Action failed. Ensure Spotify is open.', true);
         }
