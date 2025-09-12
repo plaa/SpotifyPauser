@@ -409,9 +409,22 @@
         return Number.isFinite(n) && n >= 0 ? n : 0;
       }
 
+      async function resumePlaybackNow() {
+        try {
+          await startPlayback();
+        } finally {
+          inBetweenPause = false;
+          stopCountdown();
+          setBigButton('⏸', 'Playing');
+          // Restart polling immediately to reflect state without delay
+          if (pollTimer) clearTimeout(pollTimer);
+          pollLoop();
+        }
+      }
+
       function startCountdown() {
         stopCountdown();
-        countdownTimer = setInterval(() => {
+        countdownTimer = setInterval(async () => {
           if (!inBetweenPause) return stopCountdown();
           if (els.permanent.checked) {
             setBigButton('⏸', 'Paused');
@@ -420,7 +433,9 @@
           const ms = Math.max(0, (resumeAt || 0) - Date.now());
           const s = Math.ceil(ms / 1000);
           setBigButton(`▶ ${s}s`, 'Resuming soon');
-          if (ms <= 0) stopCountdown();
+          if (ms <= 0) {
+            await resumePlaybackNow();
+          }
         }, 200);
       }
       function stopCountdown() {
@@ -498,15 +513,9 @@
           } else {
             // Paused. If we're in between songs (we paused), handle resume.
             if (inBetweenPause) {
-              if (!els.permanent.checked && resumeAt && Date.now() >= resumeAt) {
-                await startPlayback();
-                inBetweenPause = false;
-                stopCountdown();
-                setBigButton('⏸', 'Playing');
-              } else {
-                startCountdown();
-                await updateUpcoming();
-              }
+              // Keep countdown/next info fresh. Immediate resume is handled by countdown timer.
+              startCountdown();
+              await updateUpcoming();
             } else {
               // User manually paused; reflect state.
               setBigButton('▶', 'Paused');
@@ -516,6 +525,11 @@
           const duration = item?.duration_ms ?? 0;
           const remaining = Math.max(0, duration - (progress_ms ?? 0));
           if (is_playing && remaining < 15_000) return 5_000; // tighten polling
+          if (!is_playing && inBetweenPause && !els.permanent.checked) {
+            // While waiting to resume, poll closer to the resume moment
+            const ms = Math.max(200, (resumeAt || Date.now()) - Date.now());
+            return Math.min(1_000, ms);
+          }
           return 15_000;
         } catch (e) {
           setStatus('Playback check failed. Retrying…');
