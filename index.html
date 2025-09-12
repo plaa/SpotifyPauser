@@ -160,7 +160,7 @@
       }
       .btn.accent { background: var(--accent); color: #09110c; border: none; }
 
-      .upnext { text-align: center; margin-top: 8px; color: var(--muted); }
+      .upnext { text-align: center; margin-top: 8px; color: var(--muted); display:none; }
 
       footer { text-align: center; margin-top: 36px; color: var(--muted); font-size: 12px; }
       a { color: var(--accent); text-decoration: none; }
@@ -245,6 +245,7 @@
       let countdownTimer = null;
       let inBetweenPause = false;
       let resumeAt = null;
+      let upNextCache = null; // cache next queue item during pause
 
       // ----- Utils -----
       const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -404,6 +405,18 @@
         els.nowSubtitle.textContent = `${artists} • ${msToClock(item.duration_ms)} • ${is_playing ? '▶' : '⏸'} ${msToClock(remain)} left`;
       }
 
+      function setHeaderToUpcoming() {
+        const nxt = upNextCache;
+        if (!nxt) return;
+        els.cover.style.visibility = 'visible';
+        const art = nxt.album?.images?.[1]?.url || nxt.album?.images?.[0]?.url;
+        els.cover.src = art || '';
+        els.nowTitle.textContent = nxt.name || 'Unknown';
+        const artists = artistsToString(nxt.artists);
+        // Indicate it's the next track but show it prominently
+        els.nowSubtitle.textContent = `${artists} • ⏭ Up next`;
+      }
+
       function getDelaySec() {
         const n = parseInt(els.delay.value, 10);
         return Number.isFinite(n) && n >= 0 ? n : 0;
@@ -484,12 +497,12 @@
         try {
           const q = await getQueue();
           const nxt = q?.queue?.[0];
-          if (nxt) {
-            setUpcoming(`Up next: ${nxt.name} — ${artistsToString(nxt.artists)}`);
-          } else {
-            setUpcoming('');
-          }
+          upNextCache = nxt || null;
+          // Hide separate 'up next' text; show in header during pause instead
+          setUpcoming('');
+          if (inBetweenPause && upNextCache) setHeaderToUpcoming();
         } catch {
+          upNextCache = null;
           setUpcoming('');
         }
       }
@@ -508,7 +521,11 @@
           }
 
           const { is_playing, item, progress_ms } = playback;
-          setNowPlaying(item, progress_ms, is_playing);
+          if (inBetweenPause && upNextCache) {
+            setHeaderToUpcoming();
+          } else {
+            setNowPlaying(item, progress_ms, is_playing);
+          }
 
           if (is_playing) {
             // Normal play: ensure UI shows Pause icon
@@ -519,9 +536,10 @@
           } else {
             // Paused. If we're in between songs (we paused), handle resume.
             if (inBetweenPause) {
-              // Keep countdown/next info fresh. Immediate resume is handled by countdown timer.
+              // Keep countdown fresh and show next on header.
               startCountdown();
               await updateUpcoming();
+              if (upNextCache) setHeaderToUpcoming();
             } else {
               // User manually paused; reflect state.
               setBigButton('▶', 'Paused');
