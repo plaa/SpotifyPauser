@@ -247,6 +247,30 @@
       let resumeAt = null;
       let upNextCache = null; // cache next queue item during pause
 
+      // Preference keys
+      const PREF_DELAY_SECS = 'sp_pref_delay_secs';
+      const PREF_PERMANENT = 'sp_pref_permanent';
+
+      function loadPrefs() {
+        const delayRaw = localStorage.getItem(PREF_DELAY_SECS);
+        const permRaw = localStorage.getItem(PREF_PERMANENT);
+        const delay = Number.parseInt(delayRaw ?? '', 10);
+        const permanent = permRaw === '1' || permRaw === 'true';
+        if (Number.isFinite(delay) && delay >= 0) {
+          els.delay.value = String(delay);
+        }
+        els.permanent.checked = permanent;
+        els.delay.disabled = permanent;
+      }
+
+      function saveDelayPref() {
+        const n = getDelaySec();
+        localStorage.setItem(PREF_DELAY_SECS, String(n));
+      }
+      function savePermanentPref() {
+        localStorage.setItem(PREF_PERMANENT, els.permanent.checked ? '1' : '0');
+      }
+
       // ----- Utils -----
       const sleep = (ms) => new Promise(r => setTimeout(r, ms));
       function msToClock(ms) {
@@ -576,6 +600,13 @@
       });
       els.permanent.addEventListener('change', () => {
         els.delay.disabled = els.permanent.checked;
+        savePermanentPref();
+      });
+      els.delay.addEventListener('change', () => {
+        // Normalize and persist
+        const n = getDelaySec();
+        els.delay.value = String(n);
+        saveDelayPref();
       });
       els.toggleBtn.addEventListener('click', async () => {
         try {
@@ -628,6 +659,9 @@
             scheduleRefresh();
           }
         }
+
+        // Load and apply user preferences for delay/permanent pause
+        loadPrefs();
 
         if (token) {
           setStatus('Connected.');
