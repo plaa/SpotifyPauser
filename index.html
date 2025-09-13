@@ -191,7 +191,7 @@
       </header>
 
       <div id="appControls" class="panel controls" style="display:none;">
-        <button id="toggleBtn" class="big-btn" title="Play/Pause"><div class="btn-icon">▶</div></button>
+        <button id="toggleBtn" class="big-btn" title="Play/Pause"><div class="btn-icon">▶︎</div></button>
         <div id="bigSub" class="big-sub">Ready</div>
 
         <div class="grid">
@@ -248,6 +248,9 @@
         'user-modify-playback-state',
         'user-read-currently-playing'
       ];
+      // Icons with text presentation (VS15) to avoid colored emoji on some devices
+      const ICON_PLAY = '▶︎';  // U+25B6 U+FE0E
+      const ICON_PAUSE = '⏸︎'; // U+23F8 U+FE0E
 
       // ----- State -----
       const els = {
@@ -499,7 +502,7 @@
         els.nowTitle.textContent = item.name || 'Unknown';
         const remain = item.duration_ms - (progress_ms || 0);
         const artists = artistsToString(item.artists);
-        els.nowSubtitle.textContent = `${artists} • ${msToClock(item.duration_ms)} • ${is_playing ? '▶' : '⏸'} ${msToClock(remain)} left`;
+        els.nowSubtitle.textContent = `${artists} • ${msToClock(item.duration_ms)} • ${is_playing ? ICON_PLAY : ICON_PAUSE} ${msToClock(remain)} left`;
       }
 
       function setHeaderToUpcoming() {
@@ -541,12 +544,12 @@
         countdownTimer = setInterval(async () => {
           if (!inBetweenPause) return stopCountdown();
           if (els.permanent.checked) {
-            setBigButton('⏸', 'Paused');
+            setBigButton(ICON_PAUSE, 'Paused');
             return;
           }
           const ms = Math.max(0, (resumeAt || 0) - Date.now());
           const s = Math.ceil(ms / 1000);
-          setBigButton('▶', 'Resuming soon', String(s));
+          setBigButton(ICON_PLAY, 'Resuming soon', String(s));
           if (ms <= 0) {
             await resumePlaybackNow();
           }
@@ -611,7 +614,7 @@
           if (!playback) {
             setStatus('No active device. Start Spotify on a device.');
             setNowPlaying(null);
-            setBigButton('▶', 'Ready');
+            setBigButton(ICON_PLAY, 'Ready');
             inBetweenPause = false;
             stopCountdown();
             return 5_000;
@@ -626,7 +629,7 @@
 
           if (is_playing) {
             // Normal play: ensure UI shows Pause icon
-            setBigButton('⏸', 'Playing');
+            setBigButton(ICON_PAUSE, 'Playing');
             inBetweenPause = false;
             stopCountdown();
             await schedulePauseIfNeeded(playback);
@@ -669,7 +672,7 @@
         setStatus('Signed out.');
         els.logoutBtn.style.display = 'none';
         setSignedInUI(false);
-        setBigButton('▶', 'Ready');
+        setBigButton(ICON_PLAY, 'Ready');
       });
       els.permanent.addEventListener('change', () => {
         els.delay.disabled = els.permanent.checked;
@@ -690,16 +693,16 @@
             await startPlayback();
             inBetweenPause = false;
             stopCountdown();
-            setBigButton('⏸', 'Playing');
+            setBigButton(ICON_PAUSE, 'Playing');
             schedulePollIn(1000);
             return;
           }
           if (playback.is_playing) {
             await pausePlayback();
-            setBigButton('▶', 'Paused');
+              setBigButton(ICON_PLAY, 'Paused');
           } else {
             await startPlayback();
-            setBigButton('⏸', 'Playing');
+            setBigButton(ICON_PAUSE, 'Playing');
           }
           schedulePollIn(1000);
         } catch (e) {
