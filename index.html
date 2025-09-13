@@ -475,6 +475,9 @@
       let plannedPauseAt = null; // epoch ms when pause timeout planned to fire
       let plannedPauseTrackId = null; // track id associated with scheduled pause
       let countdownLast = null; // last whole-second value shown on button
+      // Status tracking for auto-reset from error
+      let statusErrorAt = 0;
+      let statusIsError = false;
 
       // Preference keys
       const PREF_DELAY_SECS = "sp_pref_delay_secs";
@@ -732,6 +735,8 @@
       function setStatus(msg, isErr = false) {
         els.status.textContent = msg || "";
         els.status.classList.toggle("error", !!isErr);
+        if (isErr) { statusIsError = true; statusErrorAt = Date.now(); }
+        else { statusIsError = false; }
       }
       function setBigButton(icon, sub, countText = null) {
         const countHtml = countText
@@ -1011,6 +1016,12 @@
 
           // Fixed-interval polling
           log('pollOnce end: scheduling next poll in 5000ms');
+          // If an error was shown earlier, and we've had a successful poll for 10s,
+          // restore the Connected message.
+          if (statusIsError && (Date.now() - statusErrorAt) >= 10_000) {
+            setStatus('Connected.');
+            log('status reset to Connected after prior error');
+          }
           return 5_000;
         } catch (e) {
           setStatus("Playback check failed. Retrying…");
