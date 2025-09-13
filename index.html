@@ -70,9 +70,22 @@
       .now-subtitle {
         color: var(--muted);
         font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
         white-space: nowrap;
+      }
+      .now-subtitle .artists {
+        min-width: 0;
+        flex: 0 1 auto; /* shrink if needed, do not expand to push meta away */
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+      .now-subtitle .meta {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
       }
 
       .panel {
@@ -764,19 +777,17 @@
         els.nowTitle.textContent = item.name || "Unknown";
         const remain = item.duration_ms - (progress_ms || 0);
         const artists = artistsToString(item.artists);
-        // Build subtitle with SVG icon without using innerHTML to keep text safe
-        els.nowSubtitle.textContent = "";
-        els.nowSubtitle.append(
-          document.createTextNode(
-            `${artists} • ${msToClock(item.duration_ms)} • `
-          )
-        );
-        els.nowSubtitle.appendChild(
-          createIconSVG(is_playing ? "play" : "pause", 14)
-        );
-        els.nowSubtitle.append(
-          document.createTextNode(` ${msToClock(remain)} left`)
-        );
+        // Build subtitle with artists cropped, meta always visible
+        const sub = els.nowSubtitle;
+        sub.textContent = "";
+        const a = document.createElement('span'); a.className = 'artists'; a.textContent = artists;
+        const meta = document.createElement('span'); meta.className = 'meta';
+        meta.append(document.createTextNode(' • '));
+        meta.append(document.createTextNode(msToClock(item.duration_ms)));
+        meta.append(document.createTextNode(' • '));
+        meta.appendChild(createIconSVG(is_playing ? 'play' : 'pause', 14));
+        meta.append(document.createTextNode(` ${msToClock(remain)} left`));
+        sub.append(a, meta);
       }
 
       function setHeaderToUpcoming() {
@@ -788,8 +799,13 @@
         els.cover.src = art || "";
         els.nowTitle.textContent = nxt.name || "Unknown";
         const artists = artistsToString(nxt.artists);
-        // Indicate it's the next track but show it prominently
-        els.nowSubtitle.textContent = `${artists} • ⏭ Up next`;
+        // Indicate it's the next track but show it prominently; crop artists only
+        const sub = els.nowSubtitle;
+        sub.textContent = '';
+        const a = document.createElement('span'); a.className = 'artists'; a.textContent = artists;
+        const meta = document.createElement('span'); meta.className = 'meta';
+        meta.append(document.createTextNode(' • ⏭ Up next'));
+        sub.append(a, meta);
       }
 
       function getDelaySec() {
