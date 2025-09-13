@@ -896,6 +896,8 @@
                 resumeAt = null;
               }
               startCountdown();
+              // This scheduled pause is now consumed; clear planned markers
+              plannedPauseAt = null; plannedPauseTrackId = null;
               // Immediately refresh upcoming using current playback context to avoid showing next-to-next
               let pb2 = null;
               try {
@@ -957,28 +959,33 @@
           // (within a small window) to emulate end-of-track pause.
           if (!inBetweenPause && plannedPauseTrackId && item?.id && plannedPauseTrackId !== item.id) {
             const nearStart = (progress_ms ?? 0) <= 1500;
+            const recentPlan = plannedPauseAt && (Date.now() - plannedPauseAt) <= 3000;
             if (nearStart) {
-              log('catch-up pause: track advanced before scheduled pause; pausing at start of next track', { prev: plannedPauseTrackId, now: item.id, progress_ms });
-              try {
-                pauseInFlight = true;
-                await pausePlayback();
-                inBetweenPause = true;
-                if (!els.permanent.checked) {
-                  resumeAt = Date.now() + getDelaySec() * 1000;
-                } else {
-                  resumeAt = null;
+              if (recentPlan && !pauseInFlight && !resumeInFlight) {
+                log('catch-up pause: track advanced before scheduled pause; pausing at start of next track', { prev: plannedPauseTrackId, now: item.id, progress_ms });
+                try {
+                  pauseInFlight = true;
+                  await pausePlayback();
+                  inBetweenPause = true;
+                  if (!els.permanent.checked) {
+                    resumeAt = Date.now() + getDelaySec() * 1000;
+                  } else {
+                    resumeAt = null;
+                  }
+                  startCountdown();
+                  await updateUpcoming(playback);
+                  if (upNextCache) setHeaderToUpcoming();
+                  schedulePollIn(1000);
+                } finally {
+                  pauseInFlight = false;
                 }
-                startCountdown();
-                await updateUpcoming(playback);
-                if (upNextCache) setHeaderToUpcoming();
-                schedulePollIn(1000);
-              } finally {
-                pauseInFlight = false;
+                // Reset planned markers after catch-up
+                plannedPauseAt = null; plannedPauseTrackId = null;
+                log('catch-up pause applied');
+                return 1000;
+              } else {
+                log('catch-up: near start but plan not recent or other op in flight; skip catch-up', { recentPlan, pauseInFlight, resumeInFlight });
               }
-              // Reset planned markers after catch-up
-              plannedPauseAt = null; plannedPauseTrackId = null;
-              log('catch-up pause applied');
-              return 1000;
             } else {
               log('catch-up: track advanced but not near start; clear planned', { prev: plannedPauseTrackId, now: item.id, progress_ms });
               plannedPauseAt = null; plannedPauseTrackId = null;
