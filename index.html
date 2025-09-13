@@ -107,7 +107,9 @@
         transition: transform 120ms ease, filter 120ms ease;
         --icon-size: 88px;
       }
-      .btn-icon { font-size: var(--icon-size); line-height: 1; }
+      .btn-icon { line-height: 1; }
+      .btn-icon svg { width: var(--icon-size); height: var(--icon-size); display: block; fill: currentColor; }
+      .now-subtitle svg { width: 14px; height: 14px; vertical-align: -2px; fill: currentColor; }
       .btn-count { font-size: calc(var(--icon-size) * 0.8); line-height: 1; }
       .big-btn:active { transform: translateY(2px) scale(0.99); filter: brightness(0.98); }
       .big-sub {
@@ -191,7 +193,7 @@
       </header>
 
       <div id="appControls" class="panel controls" style="display:none;">
-        <button id="toggleBtn" class="big-btn" title="Play/Pause"><div class="btn-icon">▶︎</div></button>
+        <button id="toggleBtn" class="big-btn" title="Play/Pause"><div class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></div></button>
         <div id="bigSub" class="big-sub">Ready</div>
 
         <div class="grid">
@@ -249,9 +251,30 @@
         'user-modify-playback-state',
         'user-read-currently-playing'
       ];
-      // Icons with text presentation (VS15) to avoid colored emoji on some devices
-      const ICON_PLAY = '▶︎';  // U+25B6 U+FE0E
-      const ICON_PAUSE = '⏸︎'; // U+23F8 U+FE0E
+      // Inline SVG icons to avoid platform emoji styling
+      const ICON_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>';
+      const ICON_PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14"></rect><rect x="14" y="5" width="4" height="14"></rect></svg>';
+      function createIconSVG(type, size = 14) {
+        const ns = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.style.width = size + 'px';
+        svg.style.height = size + 'px';
+        svg.style.fill = 'currentColor';
+        if (type === 'play') {
+          const p = document.createElementNS(ns, 'path');
+          p.setAttribute('d', 'M8 5v14l11-7z');
+          svg.appendChild(p);
+        } else {
+          const r1 = document.createElementNS(ns, 'rect');
+          r1.setAttribute('x', '6'); r1.setAttribute('y', '5'); r1.setAttribute('width', '4'); r1.setAttribute('height', '14');
+          const r2 = document.createElementNS(ns, 'rect');
+          r2.setAttribute('x', '14'); r2.setAttribute('y', '5'); r2.setAttribute('width', '4'); r2.setAttribute('height', '14');
+          svg.appendChild(r1); svg.appendChild(r2);
+        }
+        return svg;
+      }
 
       // ----- State -----
       const els = {
@@ -505,7 +528,11 @@
         els.nowTitle.textContent = item.name || 'Unknown';
         const remain = item.duration_ms - (progress_ms || 0);
         const artists = artistsToString(item.artists);
-        els.nowSubtitle.textContent = `${artists} • ${msToClock(item.duration_ms)} • ${is_playing ? ICON_PLAY : ICON_PAUSE} ${msToClock(remain)} left`;
+        // Build subtitle with SVG icon without using innerHTML to keep text safe
+        els.nowSubtitle.textContent = '';
+        els.nowSubtitle.append(document.createTextNode(`${artists} • ${msToClock(item.duration_ms)} • `));
+        els.nowSubtitle.appendChild(createIconSVG(is_playing ? 'play' : 'pause', 14));
+        els.nowSubtitle.append(document.createTextNode(` ${msToClock(remain)} left`));
       }
 
       function setHeaderToUpcoming() {
@@ -536,7 +563,7 @@
         } finally {
           inBetweenPause = false;
           stopCountdown();
-          setBigButton('⏸', 'Playing');
+          setBigButton(ICON_PAUSE, 'Playing');
           // Schedule a quick poll to refresh UI/state shortly after resume
           schedulePollIn(1000);
         }
@@ -645,7 +672,7 @@
               if (upNextCache) setHeaderToUpcoming();
             } else {
               // User manually paused; reflect state.
-              setBigButton('▶', 'Paused');
+              setBigButton(ICON_PLAY, 'Paused');
             }
           }
 
