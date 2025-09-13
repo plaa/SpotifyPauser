@@ -148,6 +148,7 @@
       .hint { color: var(--muted); font-size: 13px; text-align: center; }
       .status { text-align: center; color: var(--muted); margin-top: 10px; min-height: 20px; }
       .error { color: var(--danger); }
+      .warn { color: var(--danger); text-align: center; font-weight: 700; margin-top: 6px; }
 
       .auth {
         display: flex;
@@ -198,6 +199,7 @@
       <div id="appControls" class="panel controls" style="display:none;">
         <button id="toggleBtn" class="big-btn" title="Play/Pause"><div class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></div></button>
         <div id="bigSub" class="big-sub">Ready</div>
+        <div id="multiWarn" class="warn" style="display:none"></div>
 
         <div class="grid">
           <div class="field">
@@ -231,6 +233,7 @@
           Spotify restricts publishing apps using the API, so you need to create your own Spotify Client ID and add your Spotify account as a test user to use Pauser. See instructions on
           <a href="https://github.com/plaa/SpotifyPauser" target="_blank" rel="noopener">GitHub</a>.
         </p>
+        <div id="multiWarnIntro" class="warn" style="display:none"></div>
         <div class="field" style="justify-content:center; gap:10px; margin-top:16px;">
           <label for="clientIdInput"><strong>Client ID</strong></label>
           <input id="clientIdInput" type="text" inputmode="latin" autocomplete="off" spellcheck="false" placeholder="11223344556677889900aabbccddeeff" style="width:340px; text-align:left;" />
@@ -294,7 +297,9 @@
         status: document.getElementById('status'),
         loginBtn: document.getElementById('loginBtn'),
         logoutBtn: document.getElementById('logoutBtn'),
-        fullscreenBtn: document.getElementById('fullscreenBtn')
+        fullscreenBtn: document.getElementById('fullscreenBtn'),
+        multiWarn: document.getElementById('multiWarn'),
+        multiWarnIntro: document.getElementById('multiWarnIntro')
       };
 
 
@@ -311,6 +316,7 @@
       const PREF_DELAY_SECS = 'sp_pref_delay_secs';
       const PREF_PERMANENT = 'sp_pref_permanent';
       const PREF_CLIENT_ID = 'sp_client_id';
+      const TAB_REG_KEY = 'sp_tab_registry';
 
       function loadPrefs() {
         const delayRaw = localStorage.getItem(PREF_DELAY_SECS);
@@ -337,6 +343,8 @@
         document.getElementById('appControls').style.display = on ? 'grid' : 'none';
         document.getElementById('intro').style.display = on ? 'none' : 'block';
         if (els.fullscreenBtn) els.fullscreenBtn.style.display = on ? 'inline-block' : 'none';
+        // Update multi-tab warning positioning
+        updateMultiTabWarning(currentTabCount);
       }
 
       function isValidClientId(s) {
@@ -718,6 +726,66 @@
         setSignedInUI(false);
         setBigButton(ICON_PLAY, 'Ready');
       });
+
+      // ----- Multi-tab detection (same browser) -----
+      let tabId = null;
+      let tabBeatTimer = null;
+      let currentTabCount = 1;
+      function getRegistry() {
+        try { return JSON.parse(localStorage.getItem(TAB_REG_KEY) || '{}') || {}; } catch { return {}; }
+      }
+      function setRegistry(obj) {
+        try { localStorage.setItem(TAB_REG_KEY, JSON.stringify(obj)); } catch {}
+      }
+      function pruneRegistry(reg) {
+        const now = Date.now();
+        const out = {};
+        for (const [k, v] of Object.entries(reg || {})) {
+          if (typeof v === 'number' && now - v <= 6000) out[k] = v; // 6s stale window
+        }
+        return out;
+      }
+      function updateMultiTabWarning(count) {
+        currentTabCount = count;
+        const show = count > 1;
+        const msg = 'Warning: Pauser is open in multiple tabs. Close other tabs to avoid conflicts.';
+        if (els.multiWarn) {
+          const signedIn = document.getElementById('appControls').style.display !== 'none';
+          els.multiWarn.style.display = show && signedIn ? 'block' : 'none';
+          els.multiWarn.textContent = show && signedIn ? msg : '';
+        }
+        if (els.multiWarnIntro) {
+          const signedOut = document.getElementById('intro').style.display !== 'none';
+          els.multiWarnIntro.style.display = show && signedOut ? 'block' : 'none';
+          els.multiWarnIntro.textContent = show && signedOut ? msg : '';
+        }
+      }
+      function heartbeatOnce() {
+        const reg = pruneRegistry(getRegistry());
+        reg[tabId] = Date.now();
+        setRegistry(reg);
+        updateMultiTabWarning(Object.keys(reg).length);
+      }
+      function startHeartbeat() {
+        if (!tabId) tabId = randomString(16);
+        if (tabBeatTimer) clearInterval(tabBeatTimer);
+        heartbeatOnce();
+        tabBeatTimer = setInterval(heartbeatOnce, 2000);
+      }
+      function stopHeartbeat() {
+        if (tabBeatTimer) clearInterval(tabBeatTimer);
+        tabBeatTimer = null;
+        const reg = pruneRegistry(getRegistry());
+        if (tabId) delete reg[tabId];
+        setRegistry(reg);
+      }
+      window.addEventListener('storage', (e) => {
+        if (e.key === TAB_REG_KEY) {
+          const reg = pruneRegistry(getRegistry());
+          updateMultiTabWarning(Object.keys(reg).length);
+        }
+      });
+      window.addEventListener('beforeunload', stopHeartbeat);
       function isFullscreen() { return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement); }
       function updateFullscreenBtnLabel() {
         if (!els.fullscreenBtn) return;
@@ -824,6 +892,8 @@
           setSignedInUI(false);
           els.logoutBtn.style.display = 'none';
         }
+        // Start multi-tab heartbeat regardless of auth state
+        startHeartbeat();
       })();
     </script>
   </body>
