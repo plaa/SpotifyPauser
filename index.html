@@ -153,6 +153,11 @@
         justify-content: center;
         margin: 20px 0 10px;
       }
+      /* Intro panel text layout */
+      .intro { padding-top: 32px; }
+      .intro p { max-width: 480px; margin: 0 auto 16px; }
+      .intro p:first-of-type { font-weight: 700; }
+      .intro .status { max-width: 480px; margin: 14px auto 0; }
       .btn {
         padding: 10px 14px;
         border-radius: 10px;
@@ -177,7 +182,7 @@
   </head>
   <body>
     <div class="container">
-      <header>
+      <header id="appHeader" style="display:none;">
         <img id="cover" class="cover" alt="cover" />
         <div class="titles">
           <div id="nowTitle" class="now-title">Not playing</div>
@@ -185,7 +190,7 @@
         </div>
       </header>
 
-      <div class="panel controls">
+      <div id="appControls" class="panel controls" style="display:none;">
         <button id="toggleBtn" class="big-btn" title="Play/Pause"><div class="btn-icon">▶</div></button>
         <div id="bigSub" class="big-sub">Ready</div>
 
@@ -204,9 +209,29 @@
         <div id="upnext" class="upnext"></div>
         <div id="status" class="status"></div>
         <div class="auth">
-          <button id="loginBtn" class="btn accent">Connect to Spotify</button>
           <button id="logoutBtn" class="btn" style="display:none">Sign out</button>
         </div>
+      </div>
+
+      <div id="intro" class="panel intro" style="display:block;">
+        <p>
+          Pauser allows you to pause a Spotify playlist for a desired amount of time between songs, useful for example for dance playlists.
+        </p>
+        <p>
+          Use Spotify to play playlists normally, and keep Pauser open in a browser window. On mobile keep the browser open and display on.
+        </p>
+        <p>
+          Spotify restricts publishing apps using the API, so you need to create your own Spotify Client ID and add your Spotify account as a test user to use Pauser. See instructions on
+          <a href="https://github.com/plaa/SpotifyPauser" target="_blank" rel="noopener">GitHub</a>.
+        </p>
+        <div class="field" style="justify-content:center; gap:10px; margin-top:16px;">
+          <label for="clientIdInput"><strong>Client ID</strong></label>
+          <input id="clientIdInput" type="text" inputmode="latin" autocomplete="off" spellcheck="false" placeholder="11223344556677889900aabbccddeeff" style="width:340px; text-align:left;" />
+        </div>
+        <div style="text-align:center; margin-top:16px;">
+          <button id="loginBtn" class="btn accent">Connect to Spotify</button>
+        </div>
+        <div id="statusIntro" class="status" aria-live="polite"></div>
       </div>
 
       <footer>
@@ -216,7 +241,7 @@
 
     <script>
       // ----- Config -----
-      const CLIENT_ID = '097723079f8d4901b97bba1cb7aa0fb9';
+      let CLIENT_ID = null; // set from user input or saved prefs
       const REDIRECT_URI = window.location.origin + window.location.pathname;
       const SCOPES = [
         'user-read-playback-state',
@@ -252,6 +277,7 @@
       // Preference keys
       const PREF_DELAY_SECS = 'sp_pref_delay_secs';
       const PREF_PERMANENT = 'sp_pref_permanent';
+      const PREF_CLIENT_ID = 'sp_client_id';
 
       function loadPrefs() {
         const delayRaw = localStorage.getItem(PREF_DELAY_SECS);
@@ -271,6 +297,32 @@
       }
       function savePermanentPref() {
         localStorage.setItem(PREF_PERMANENT, els.permanent.checked ? '1' : '0');
+      }
+
+      function setSignedInUI(on) {
+        document.getElementById('appHeader').style.display = on ? 'flex' : 'none';
+        document.getElementById('appControls').style.display = on ? 'grid' : 'none';
+        document.getElementById('intro').style.display = on ? 'none' : 'block';
+      }
+
+      function isValidClientId(s) {
+        return typeof s === 'string' && /^[A-Za-z0-9]{1,50}$/.test(s);
+      }
+
+      function loadClientId() {
+        const saved = localStorage.getItem(PREF_CLIENT_ID);
+        if (isValidClientId(saved)) CLIENT_ID = saved;
+        // Prefill from ?id= if valid
+        const p = new URLSearchParams(window.location.search).get('id');
+        if (isValidClientId(p)) {
+          const input = document.getElementById('clientIdInput');
+          if (input) input.value = p;
+        } else if (!saved) {
+          // if nothing saved, leave placeholder
+        } else {
+          const input = document.getElementById('clientIdInput');
+          if (input) input.value = saved;
+        }
       }
 
       // ----- Utils -----
@@ -310,11 +362,23 @@
         return await crypto.subtle.digest('SHA-256', data);
       }
       async function startAuth() {
+        const input = document.getElementById('clientIdInput');
+        const candidate = input?.value?.trim();
+        if (!isValidClientId(candidate) && !isValidClientId(CLIENT_ID)) {
+          const msg = 'Please enter a valid Client ID (alphanumeric, 1–50 chars).';
+          const sIntro = document.getElementById('statusIntro');
+          if (sIntro) { sIntro.textContent = msg; sIntro.classList.add('error'); }
+          else setStatus(msg, true);
+          return;
+        }
+        CLIENT_ID = isValidClientId(candidate) ? candidate : CLIENT_ID;
+        localStorage.setItem(PREF_CLIENT_ID, CLIENT_ID);
         const codeVerifier = randomString(64);
         const codeChallenge = base64url(await sha256(codeVerifier));
         const state = randomString(16);
         sessionStorage.setItem('sp_code_verifier', codeVerifier);
         sessionStorage.setItem('sp_state', state);
+        sessionStorage.setItem('sp_client_id', CLIENT_ID);
         const params = new URLSearchParams({
           client_id: CLIENT_ID,
           response_type: 'code',
@@ -328,6 +392,9 @@
       }
       async function exchangeCodeForToken(code) {
         const code_verifier = sessionStorage.getItem('sp_code_verifier');
+        const cid = sessionStorage.getItem('sp_client_id') || localStorage.getItem(PREF_CLIENT_ID);
+        if (!isValidClientId(cid)) throw new Error('Missing client id');
+        CLIENT_ID = cid;
         const stateExpected = sessionStorage.getItem('sp_state');
         const stateReceived = new URL(window.location.href).searchParams.get('state');
         if (stateExpected && stateReceived && stateExpected !== stateReceived) throw new Error('Invalid state');
@@ -351,6 +418,9 @@
       }
       async function refreshToken() {
         if (!token?.refresh_token) return;
+        const cid = CLIENT_ID || localStorage.getItem(PREF_CLIENT_ID) || sessionStorage.getItem('sp_client_id');
+        if (!isValidClientId(cid)) return;
+        CLIENT_ID = cid;
         const body = new URLSearchParams({
           client_id: CLIENT_ID,
           grant_type: 'refresh_token',
@@ -597,8 +667,8 @@
         clearPauseSchedule();
         stopCountdown();
         setStatus('Signed out.');
-        els.loginBtn.style.display = 'inline-block';
         els.logoutBtn.style.display = 'none';
+        setSignedInUI(false);
         setBigButton('▶', 'Ready');
       });
       els.permanent.addEventListener('change', () => {
@@ -639,6 +709,9 @@
 
       // ----- Init -----
       (async function init() {
+        // Load client id preference and prefill
+        loadClientId();
+
         // Handle auth redirect
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
@@ -668,10 +741,11 @@
 
         if (token) {
           setStatus('Connected.');
+          setSignedInUI(true);
           pollLoop();
         } else {
           setStatus('Connect to Spotify to begin.');
-          els.loginBtn.style.display = 'inline-block';
+          setSignedInUI(false);
           els.logoutBtn.style.display = 'none';
         }
       })();
