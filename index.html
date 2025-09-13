@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -12,15 +12,21 @@
         --muted: #a7b0bd;
         --accent: #1db954;
         --danger: #ff5c70;
-        --shadow: 0 10px 30px rgba(0,0,0,0.35);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
       }
 
-      html, body {
+      html,
+      body {
         height: 100%;
         margin: 0;
-        background: radial-gradient(1200px 600px at 70% -20%, #1a2030, var(--bg));
+        background: radial-gradient(
+          1200px 600px at 70% -20%,
+          #1a2030,
+          var(--bg)
+        );
         color: var(--text);
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+          Arial, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
       }
@@ -70,8 +76,12 @@
       }
 
       .panel {
-        background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-        border: 1px solid rgba(255,255,255,0.06);
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.04),
+          rgba(255, 255, 255, 0.02)
+        );
+        border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 16px;
         padding: 18px;
         box-shadow: var(--shadow);
@@ -97,21 +107,44 @@
         font-weight: 800;
         letter-spacing: 0.5px;
         color: #09110c;
-        background: radial-gradient(400px 200px at 50% -10%, #4ee07e, var(--accent));
+        background: radial-gradient(
+          400px 200px at 50% -10%,
+          #4ee07e,
+          var(--accent)
+        );
         border: none;
         cursor: pointer;
-        box-shadow: 0 20px 50px rgba(29,185,84,0.35), inset 0 2px 10px rgba(255,255,255,0.25);
+        box-shadow: 0 20px 50px rgba(29, 185, 84, 0.35),
+          inset 0 2px 10px rgba(255, 255, 255, 0.25);
         outline: none;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
         transition: transform 120ms ease, filter 120ms ease;
         --icon-size: 88px;
       }
-      .btn-icon { line-height: 1; }
-      .btn-icon svg { width: var(--icon-size); height: var(--icon-size); display: block; fill: currentColor; }
-      .now-subtitle svg { width: 14px; height: 14px; vertical-align: -2px; fill: currentColor; }
-      .btn-count { font-size: calc(var(--icon-size) * 0.8); line-height: 1; }
-      .big-btn:active { transform: translateY(2px) scale(0.99); filter: brightness(0.98); }
+      .btn-icon {
+        line-height: 1;
+      }
+      .btn-icon svg {
+        width: var(--icon-size);
+        height: var(--icon-size);
+        display: block;
+        fill: currentColor;
+      }
+      .now-subtitle svg {
+        width: 14px;
+        height: 14px;
+        vertical-align: -2px;
+        fill: currentColor;
+      }
+      .btn-count {
+        font-size: calc(var(--icon-size) * 0.8);
+        line-height: 1;
+      }
+      .big-btn:active {
+        transform: translateY(2px) scale(0.99);
+        filter: brightness(0.98);
+      }
       .big-sub {
         font-size: 18px;
         font-weight: 700;
@@ -132,23 +165,44 @@
         gap: 10px;
         justify-content: center;
       }
-      .field label { color: var(--muted); font-weight: 600; }
+      .field label {
+        color: var(--muted);
+        font-weight: 600;
+      }
       .field input[type="number"] {
         width: 96px;
         padding: 8px 10px;
         border-radius: 10px;
-        border: 1px solid rgba(255,255,255,0.12);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         background: #0e1320;
         color: var(--text);
         font-weight: 700;
         text-align: center;
       }
-      .field input[type="checkbox"] { transform: scale(1.2); }
+      .field input[type="checkbox"] {
+        transform: scale(1.2);
+      }
 
-      .hint { color: var(--muted); font-size: 13px; text-align: center; }
-      .status { text-align: center; color: var(--muted); margin-top: 10px; min-height: 20px; }
-      .error { color: var(--danger); }
-      .warn { color: var(--danger); text-align: center; font-weight: 700; margin-top: 6px; }
+      .hint {
+        color: var(--muted);
+        font-size: 13px;
+        text-align: center;
+      }
+      .status {
+        text-align: center;
+        color: var(--muted);
+        margin-top: 10px;
+        min-height: 20px;
+      }
+      .error {
+        color: var(--danger);
+      }
+      .warn {
+        color: var(--danger);
+        text-align: center;
+        font-weight: 700;
+        margin-top: 6px;
+      }
 
       .auth {
         display: flex;
@@ -156,39 +210,81 @@
         justify-content: center;
         margin: 20px 0 10px;
       }
-      .brand { display: flex; justify-content: center; margin: 12px 0; }
-      .brand img { width: 160px; height: auto; }
+      .brand {
+        display: flex;
+        justify-content: center;
+        margin: 12px 0;
+      }
+      .brand img {
+        width: 160px;
+        height: auto;
+      }
       /* Intro panel text layout */
-      .intro { padding-top: 32px; }
-      .intro p { max-width: 480px; margin: 0 auto 16px; }
-      .intro p:first-of-type { font-weight: 700; }
-      .intro .status { max-width: 480px; margin: 14px auto 0; }
+      .intro {
+        padding-top: 32px;
+      }
+      .intro p {
+        max-width: 480px;
+        margin: 0 auto 16px;
+      }
+      .intro p:first-of-type {
+        font-weight: 700;
+      }
+      .intro .status {
+        max-width: 480px;
+        margin: 14px auto 0;
+      }
       .btn {
         padding: 10px 14px;
         border-radius: 10px;
-        border: 1px solid rgba(255,255,255,0.12);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         background: #0e1320;
         color: var(--text);
         cursor: pointer;
         font-weight: 700;
       }
-      .btn.accent { background: var(--accent); color: #09110c; border: none; }
+      .btn.accent {
+        background: var(--accent);
+        color: #09110c;
+        border: none;
+      }
 
-      .upnext { text-align: center; margin-top: 8px; color: var(--muted); display:none; }
+      .upnext {
+        text-align: center;
+        margin-top: 8px;
+        color: var(--muted);
+        display: none;
+      }
 
-      footer { text-align: center; margin-top: 36px; color: var(--muted); font-size: 12px; }
-      a { color: var(--accent); text-decoration: none; }
+      footer {
+        text-align: center;
+        margin-top: 36px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
 
       @media (max-width: 420px) {
-        .big-btn { width: 180px; height: 180px; --icon-size: 72px; }
-        .big-sub { font-size: 16px; }
-        .brand img { width: 140px; }
+        .big-btn {
+          width: 180px;
+          height: 180px;
+          --icon-size: 72px;
+        }
+        .big-sub {
+          font-size: 16px;
+        }
+        .brand img {
+          width: 140px;
+        }
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <header id="appHeader" style="display:none;">
+      <header id="appHeader" style="display: none">
         <img id="cover" class="cover" alt="cover" />
         <div class="titles">
           <div id="nowTitle" class="now-title">Not playing</div>
@@ -196,10 +292,16 @@
         </div>
       </header>
 
-      <div id="appControls" class="panel controls" style="display:none;">
-        <button id="toggleBtn" class="big-btn" title="Play/Pause"><div class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg></div></button>
+      <div id="appControls" class="panel controls" style="display: none">
+        <button id="toggleBtn" class="big-btn" title="Play/Pause">
+          <div class="btn-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5v14l11-7z"></path>
+            </svg>
+          </div>
+        </button>
         <div id="bigSub" class="big-sub">Ready</div>
-        <div id="multiWarn" class="warn" style="display:none"></div>
+        <div id="multiWarn" class="warn" style="display: none"></div>
 
         <div class="grid">
           <div class="field">
@@ -216,37 +318,76 @@
         <div id="upnext" class="upnext"></div>
         <div id="status" class="status"></div>
         <div class="auth">
-          <button id="fullscreenBtn" class="btn" style="display:none">Fullscreen</button>
-          <button id="logoutBtn" class="btn" style="display:none">Sign out</button>
+          <button id="fullscreenBtn" class="btn" style="display: none">
+            Fullscreen
+          </button>
+          <button id="logoutBtn" class="btn" style="display: none">
+            Sign out
+          </button>
         </div>
-        <div class="brand"><a href="https://www.spotify.com/" target="_blank" rel="noopener"><img src="spotify.svg" alt="Spotify" /></a></div>
+        <div class="brand">
+          <a href="https://www.spotify.com/" target="_blank" rel="noopener"
+            ><img src="spotify.svg" alt="Spotify"
+          /></a>
+        </div>
       </div>
 
-      <div id="intro" class="panel intro" style="display:block;">
+      <div id="intro" class="panel intro" style="display: block">
         <p>
-          Pauser allows you to pause a Spotify playlist for a desired amount of time between songs, useful for example for dance playlists.
+          Pauser allows you to pause a Spotify playlist for a desired amount of
+          time between songs, useful for example for dance playlists.
         </p>
         <p>
-          Use Spotify to play playlists normally, and keep Pauser open in a browser window. On mobile keep the browser open and display on.
+          Use Spotify to play playlists normally, and keep Pauser open in a
+          browser window. On mobile keep the browser open and display on.
         </p>
         <p>
-          Spotify restricts publishing apps using the API, so you need to create your own Spotify Client ID and add your Spotify account as a test user to use Pauser. See instructions on
-          <a href="https://github.com/plaa/SpotifyPauser" target="_blank" rel="noopener">GitHub</a>.
+          Spotify restricts publishing apps using the API, so you need to create
+          your own Spotify Client ID and add your Spotify account as a test user
+          to use Pauser. See instructions on
+          <a
+            href="https://github.com/plaa/SpotifyPauser"
+            target="_blank"
+            rel="noopener"
+            >GitHub</a
+          >.
         </p>
-        <div id="multiWarnIntro" class="warn" style="display:none"></div>
-        <div class="field" style="justify-content:center; gap:10px; margin-top:16px;">
+        <div id="multiWarnIntro" class="warn" style="display: none"></div>
+        <div
+          class="field"
+          style="justify-content: center; gap: 10px; margin-top: 16px"
+        >
           <label for="clientIdInput"><strong>Client ID</strong></label>
-          <input id="clientIdInput" type="text" inputmode="latin" autocomplete="off" spellcheck="false" placeholder="11223344556677889900aabbccddeeff" style="width:340px; text-align:left;" />
+          <input
+            id="clientIdInput"
+            type="text"
+            inputmode="latin"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="11223344556677889900aabbccddeeff"
+            style="width: 340px; text-align: left"
+          />
         </div>
-        <div style="text-align:center; margin-top:16px;">
+        <div style="text-align: center; margin-top: 16px">
           <button id="loginBtn" class="btn accent">Connect to Spotify</button>
         </div>
         <div id="statusIntro" class="status" aria-live="polite"></div>
-        <div class="brand"><a href="https://www.spotify.com/" target="_blank" rel="noopener"><img src="spotify.svg" alt="Spotify" /></a></div>
+        <div class="brand">
+          <a href="https://www.spotify.com/" target="_blank" rel="noopener"
+            ><img src="spotify.svg" alt="Spotify"
+          /></a>
+        </div>
       </div>
 
       <footer>
-        Runs entirely in your browser and only communicates with Spotify. Source: <a href="https://github.com/plaa/SpotifyPauser" target="_blank" rel="noopener">GitHub</a>
+        Runs entirely in your browser and only communicates with Spotify.
+        Source:
+        <a
+          href="https://github.com/plaa/SpotifyPauser"
+          target="_blank"
+          rel="noopener"
+          >GitHub</a
+        >
       </footer>
     </div>
 
@@ -255,53 +396,61 @@
       let CLIENT_ID = null; // set from user input or saved prefs
       const REDIRECT_URI = window.location.origin + window.location.pathname;
       const SCOPES = [
-        'user-read-playback-state',
-        'user-modify-playback-state',
-        'user-read-currently-playing'
+        "user-read-playback-state",
+        "user-modify-playback-state",
+        "user-read-currently-playing",
       ];
       // Inline SVG icons to avoid platform emoji styling
-      const ICON_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>';
-      const ICON_PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14"></rect><rect x="14" y="5" width="4" height="14"></rect></svg>';
+      const ICON_PLAY =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>';
+      const ICON_PAUSE =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14"></rect><rect x="14" y="5" width="4" height="14"></rect></svg>';
       function createIconSVG(type, size = 14) {
-        const ns = 'http://www.w3.org/2000/svg';
-        const svg = document.createElementNS(ns, 'svg');
-        svg.setAttribute('viewBox', '0 0 24 24');
-        svg.setAttribute('aria-hidden', 'true');
-        svg.style.width = size + 'px';
-        svg.style.height = size + 'px';
-        svg.style.fill = 'currentColor';
-        if (type === 'play') {
-          const p = document.createElementNS(ns, 'path');
-          p.setAttribute('d', 'M8 5v14l11-7z');
+        const ns = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(ns, "svg");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("aria-hidden", "true");
+        svg.style.width = size + "px";
+        svg.style.height = size + "px";
+        svg.style.fill = "currentColor";
+        if (type === "play") {
+          const p = document.createElementNS(ns, "path");
+          p.setAttribute("d", "M8 5v14l11-7z");
           svg.appendChild(p);
         } else {
-          const r1 = document.createElementNS(ns, 'rect');
-          r1.setAttribute('x', '6'); r1.setAttribute('y', '5'); r1.setAttribute('width', '4'); r1.setAttribute('height', '14');
-          const r2 = document.createElementNS(ns, 'rect');
-          r2.setAttribute('x', '14'); r2.setAttribute('y', '5'); r2.setAttribute('width', '4'); r2.setAttribute('height', '14');
-          svg.appendChild(r1); svg.appendChild(r2);
+          const r1 = document.createElementNS(ns, "rect");
+          r1.setAttribute("x", "6");
+          r1.setAttribute("y", "5");
+          r1.setAttribute("width", "4");
+          r1.setAttribute("height", "14");
+          const r2 = document.createElementNS(ns, "rect");
+          r2.setAttribute("x", "14");
+          r2.setAttribute("y", "5");
+          r2.setAttribute("width", "4");
+          r2.setAttribute("height", "14");
+          svg.appendChild(r1);
+          svg.appendChild(r2);
         }
         return svg;
       }
 
       // ----- State -----
       const els = {
-        cover: document.getElementById('cover'),
-        nowTitle: document.getElementById('nowTitle'),
-        nowSubtitle: document.getElementById('nowSubtitle'),
-        toggleBtn: document.getElementById('toggleBtn'),
-        bigSub: document.getElementById('bigSub'),
-        delay: document.getElementById('delay'),
-        permanent: document.getElementById('permanent'),
-        upnext: document.getElementById('upnext'),
-        status: document.getElementById('status'),
-        loginBtn: document.getElementById('loginBtn'),
-        logoutBtn: document.getElementById('logoutBtn'),
-        fullscreenBtn: document.getElementById('fullscreenBtn'),
-        multiWarn: document.getElementById('multiWarn'),
-        multiWarnIntro: document.getElementById('multiWarnIntro')
+        cover: document.getElementById("cover"),
+        nowTitle: document.getElementById("nowTitle"),
+        nowSubtitle: document.getElementById("nowSubtitle"),
+        toggleBtn: document.getElementById("toggleBtn"),
+        bigSub: document.getElementById("bigSub"),
+        delay: document.getElementById("delay"),
+        permanent: document.getElementById("permanent"),
+        upnext: document.getElementById("upnext"),
+        status: document.getElementById("status"),
+        loginBtn: document.getElementById("loginBtn"),
+        logoutBtn: document.getElementById("logoutBtn"),
+        fullscreenBtn: document.getElementById("fullscreenBtn"),
+        multiWarn: document.getElementById("multiWarn"),
+        multiWarnIntro: document.getElementById("multiWarnIntro"),
       };
-
 
       let token = null; // { access_token, refresh_token, expires_at }
       let refreshTimer = null;
@@ -313,16 +462,16 @@
       let upNextCache = null; // cache next queue item during pause
 
       // Preference keys
-      const PREF_DELAY_SECS = 'sp_pref_delay_secs';
-      const PREF_PERMANENT = 'sp_pref_permanent';
-      const PREF_CLIENT_ID = 'sp_client_id';
-      const TAB_REG_KEY = 'sp_tab_registry';
+      const PREF_DELAY_SECS = "sp_pref_delay_secs";
+      const PREF_PERMANENT = "sp_pref_permanent";
+      const PREF_CLIENT_ID = "sp_client_id";
+      const TAB_REG_KEY = "sp_tab_registry";
 
       function loadPrefs() {
         const delayRaw = localStorage.getItem(PREF_DELAY_SECS);
         const permRaw = localStorage.getItem(PREF_PERMANENT);
-        const delay = Number.parseInt(delayRaw ?? '', 10);
-        const permanent = permRaw === '1' || permRaw === 'true';
+        const delay = Number.parseInt(delayRaw ?? "", 10);
+        const permanent = permRaw === "1" || permRaw === "true";
         if (Number.isFinite(delay) && delay >= 0) {
           els.delay.value = String(delay);
         }
@@ -335,82 +484,98 @@
         localStorage.setItem(PREF_DELAY_SECS, String(n));
       }
       function savePermanentPref() {
-        localStorage.setItem(PREF_PERMANENT, els.permanent.checked ? '1' : '0');
+        localStorage.setItem(PREF_PERMANENT, els.permanent.checked ? "1" : "0");
       }
 
       function setSignedInUI(on) {
-        document.getElementById('appHeader').style.display = on ? 'flex' : 'none';
-        document.getElementById('appControls').style.display = on ? 'grid' : 'none';
-        document.getElementById('intro').style.display = on ? 'none' : 'block';
-        if (els.fullscreenBtn) els.fullscreenBtn.style.display = on ? 'inline-block' : 'none';
+        document.getElementById("appHeader").style.display = on
+          ? "flex"
+          : "none";
+        document.getElementById("appControls").style.display = on
+          ? "grid"
+          : "none";
+        document.getElementById("intro").style.display = on ? "none" : "block";
+        if (els.fullscreenBtn)
+          els.fullscreenBtn.style.display = on ? "inline-block" : "none";
         // Update multi-tab warning positioning
         updateMultiTabWarning(currentTabCount);
       }
 
       function isValidClientId(s) {
-        return typeof s === 'string' && /^[A-Za-z0-9]{1,50}$/.test(s);
+        return typeof s === "string" && /^[A-Za-z0-9]{1,50}$/.test(s);
       }
 
       function loadClientId() {
         const saved = localStorage.getItem(PREF_CLIENT_ID);
         if (isValidClientId(saved)) CLIENT_ID = saved;
         // Prefill from ?id= if valid
-        const p = new URLSearchParams(window.location.search).get('id');
+        const p = new URLSearchParams(window.location.search).get("id");
         if (isValidClientId(p)) {
-          const input = document.getElementById('clientIdInput');
+          const input = document.getElementById("clientIdInput");
           if (input) input.value = p;
         } else if (!saved) {
           // if nothing saved, leave placeholder
         } else {
-          const input = document.getElementById('clientIdInput');
+          const input = document.getElementById("clientIdInput");
           if (input) input.value = saved;
         }
       }
 
       // ----- Utils -----
-      const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       function msToClock(ms) {
         const s = Math.max(0, Math.floor(ms / 1000));
         const m = Math.floor(s / 60);
-        const ss = String(s % 60).padStart(2, '0');
+        const ss = String(s % 60).padStart(2, "0");
         return `${m}:${ss}`;
       }
-      function artistsToString(artists) { return (artists || []).map(a => a.name).join(', '); }
+      function artistsToString(artists) {
+        return (artists || []).map((a) => a.name).join(", ");
+      }
       function saveToken(t) {
         token = t;
-        localStorage.setItem('sp_token', JSON.stringify(t));
-        els.logoutBtn.style.display = 'inline-block';
-        els.loginBtn.style.display = 'none';
+        localStorage.setItem("sp_token", JSON.stringify(t));
+        els.logoutBtn.style.display = "inline-block";
+        els.loginBtn.style.display = "none";
       }
       function loadToken() {
-        const raw = localStorage.getItem('sp_token');
+        const raw = localStorage.getItem("sp_token");
         if (!raw) return null;
-        try { return JSON.parse(raw); } catch { return null; }
+        try {
+          return JSON.parse(raw);
+        } catch {
+          return null;
+        }
       }
 
       // ----- PKCE Auth -----
       function base64url(uint8Arr) {
         let str = btoa(String.fromCharCode(...new Uint8Array(uint8Arr)));
-        return str.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/,'');
+        return str.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
       }
       function randomString(len = 64) {
         const bytes = new Uint8Array(len);
         crypto.getRandomValues(bytes);
-        return Array.from(bytes).map(b => ('0'+b.toString(16)).slice(-2)).join('');
+        return Array.from(bytes)
+          .map((b) => ("0" + b.toString(16)).slice(-2))
+          .join("");
       }
       async function sha256(str) {
         const enc = new TextEncoder();
         const data = enc.encode(str);
-        return await crypto.subtle.digest('SHA-256', data);
+        return await crypto.subtle.digest("SHA-256", data);
       }
       async function startAuth() {
-        const input = document.getElementById('clientIdInput');
+        const input = document.getElementById("clientIdInput");
         const candidate = input?.value?.trim();
         if (!isValidClientId(candidate) && !isValidClientId(CLIENT_ID)) {
-          const msg = 'Please enter a valid Client ID (alphanumeric, 1–50 chars).';
-          const sIntro = document.getElementById('statusIntro');
-          if (sIntro) { sIntro.textContent = msg; sIntro.classList.add('error'); }
-          else setStatus(msg, true);
+          const msg =
+            "Please enter a valid Client ID (alphanumeric, 1–50 chars).";
+          const sIntro = document.getElementById("statusIntro");
+          if (sIntro) {
+            sIntro.textContent = msg;
+            sIntro.classList.add("error");
+          } else setStatus(msg, true);
           return;
         }
         CLIENT_ID = isValidClientId(candidate) ? candidate : CLIENT_ID;
@@ -418,69 +583,87 @@
         const codeVerifier = randomString(64);
         const codeChallenge = base64url(await sha256(codeVerifier));
         const state = randomString(16);
-        sessionStorage.setItem('sp_code_verifier', codeVerifier);
-        sessionStorage.setItem('sp_state', state);
-        sessionStorage.setItem('sp_client_id', CLIENT_ID);
+        sessionStorage.setItem("sp_code_verifier", codeVerifier);
+        sessionStorage.setItem("sp_state", state);
+        sessionStorage.setItem("sp_client_id", CLIENT_ID);
         const params = new URLSearchParams({
           client_id: CLIENT_ID,
-          response_type: 'code',
+          response_type: "code",
           redirect_uri: REDIRECT_URI,
-          code_challenge_method: 'S256',
+          code_challenge_method: "S256",
           code_challenge: codeChallenge,
-          scope: SCOPES.join(' '),
-          state
+          scope: SCOPES.join(" "),
+          state,
         });
-        window.location.assign(`https://accounts.spotify.com/authorize?${params}`);
+        window.location.assign(
+          `https://accounts.spotify.com/authorize?${params}`
+        );
       }
       async function exchangeCodeForToken(code) {
-        const code_verifier = sessionStorage.getItem('sp_code_verifier');
-        const cid = sessionStorage.getItem('sp_client_id') || localStorage.getItem(PREF_CLIENT_ID);
-        if (!isValidClientId(cid)) throw new Error('Missing client id');
+        const code_verifier = sessionStorage.getItem("sp_code_verifier");
+        const cid =
+          sessionStorage.getItem("sp_client_id") ||
+          localStorage.getItem(PREF_CLIENT_ID);
+        if (!isValidClientId(cid)) throw new Error("Missing client id");
         CLIENT_ID = cid;
-        const stateExpected = sessionStorage.getItem('sp_state');
-        const stateReceived = new URL(window.location.href).searchParams.get('state');
-        if (stateExpected && stateReceived && stateExpected !== stateReceived) throw new Error('Invalid state');
+        const stateExpected = sessionStorage.getItem("sp_state");
+        const stateReceived = new URL(window.location.href).searchParams.get(
+          "state"
+        );
+        if (stateExpected && stateReceived && stateExpected !== stateReceived)
+          throw new Error("Invalid state");
         const body = new URLSearchParams({
           client_id: CLIENT_ID,
-          grant_type: 'authorization_code',
+          grant_type: "authorization_code",
           code,
           redirect_uri: REDIRECT_URI,
-          code_verifier
+          code_verifier,
         });
-        const res = await fetch('https://accounts.spotify.com/api/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body
+        const res = await fetch("https://accounts.spotify.com/api/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body,
         });
-        if (!res.ok) throw new Error('Token exchange failed');
+        if (!res.ok) throw new Error("Token exchange failed");
         const data = await res.json();
         const expires_at = Date.now() + (data.expires_in - 10) * 1000; // safety buffer
-        saveToken({ access_token: data.access_token, refresh_token: data.refresh_token, expires_at });
+        saveToken({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+          expires_at,
+        });
         scheduleRefresh();
       }
       async function refreshToken() {
         if (!token?.refresh_token) return;
-        const cid = CLIENT_ID || localStorage.getItem(PREF_CLIENT_ID) || sessionStorage.getItem('sp_client_id');
+        const cid =
+          CLIENT_ID ||
+          localStorage.getItem(PREF_CLIENT_ID) ||
+          sessionStorage.getItem("sp_client_id");
         if (!isValidClientId(cid)) return;
         CLIENT_ID = cid;
         const body = new URLSearchParams({
           client_id: CLIENT_ID,
-          grant_type: 'refresh_token',
+          grant_type: "refresh_token",
           refresh_token: token.refresh_token,
         });
-        const res = await fetch('https://accounts.spotify.com/api/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body
+        const res = await fetch("https://accounts.spotify.com/api/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body,
         });
         if (!res.ok) {
-          setStatus('Token refresh failed. Please connect again.', true);
+          setStatus("Token refresh failed. Please connect again.", true);
           return;
         }
         const data = await res.json();
         const expires_at = Date.now() + (data.expires_in - 10) * 1000;
         const refresh_token = data.refresh_token || token.refresh_token; // sometimes not returned
-        saveToken({ access_token: data.access_token, refresh_token, expires_at });
+        saveToken({
+          access_token: data.access_token,
+          refresh_token,
+          expires_at,
+        });
         scheduleRefresh();
       }
       function scheduleRefresh() {
@@ -491,7 +674,7 @@
       }
       async function getAccessToken() {
         if (!token) return null;
-        if (Date.now() > (token.expires_at - 60_000)) {
+        if (Date.now() > token.expires_at - 60_000) {
           await refreshToken();
         }
         return token?.access_token || null;
@@ -500,61 +683,92 @@
       // ----- Spotify API helpers -----
       async function apiFetch(path, options = {}) {
         const at = await getAccessToken();
-        if (!at) throw new Error('Not authorized');
+        if (!at) throw new Error("Not authorized");
         const res = await fetch(`https://api.spotify.com/v1${path}`, {
           ...options,
-          headers: { 'Authorization': `Bearer ${at}`, 'Content-Type': 'application/json', ...(options.headers||{}) }
+          headers: {
+            Authorization: `Bearer ${at}`,
+            "Content-Type": "application/json",
+            ...(options.headers || {}),
+          },
         });
         if (res.status === 204) return null;
         if (!res.ok) throw new Error(`API ${res.status}`);
         return res.json();
       }
-      async function getPlayback() { return apiFetch('/me/player'); }
-      async function pausePlayback() { try { await apiFetch('/me/player/pause', { method: 'PUT' }); } catch (e) { /* ignore */ } }
-      async function startPlayback() { try { await apiFetch('/me/player/play', { method: 'PUT' }); } catch (e) { /* ignore */ } }
-      async function getQueue() { return apiFetch('/me/player/queue'); }
+      async function getPlayback() {
+        return apiFetch("/me/player");
+      }
+      async function pausePlayback() {
+        try {
+          await apiFetch("/me/player/pause", { method: "PUT" });
+        } catch (e) {
+          /* ignore */
+        }
+      }
+      async function startPlayback() {
+        try {
+          await apiFetch("/me/player/play", { method: "PUT" });
+        } catch (e) {
+          /* ignore */
+        }
+      }
+      async function getQueue() {
+        return apiFetch("/me/player/queue");
+      }
 
       // ----- UI / State handling -----
       function setStatus(msg, isErr = false) {
-        els.status.textContent = msg || '';
-        els.status.classList.toggle('error', !!isErr);
+        els.status.textContent = msg || "";
+        els.status.classList.toggle("error", !!isErr);
       }
       function setBigButton(icon, sub, countText = null) {
-        const countHtml = countText ? `<div class="btn-count">${countText}</div>` : '';
+        const countHtml = countText
+          ? `<div class="btn-count">${countText}</div>`
+          : "";
         els.toggleBtn.innerHTML = `<div class="btn-icon">${icon}</div>${countHtml}`;
-        els.bigSub.textContent = sub || '';
+        els.bigSub.textContent = sub || "";
       }
       function setUpcoming(text) {
-        els.upnext.textContent = text || '';
+        els.upnext.textContent = text || "";
       }
       function setNowPlaying(item, progress_ms, is_playing) {
         if (!item) {
-          els.cover.src = '';
-          els.cover.style.visibility = 'hidden';
-          els.nowTitle.textContent = 'Not playing';
-          els.nowSubtitle.textContent = '—';
+          els.cover.src = "";
+          els.cover.style.visibility = "hidden";
+          els.nowTitle.textContent = "Not playing";
+          els.nowSubtitle.textContent = "—";
           return;
         }
-        els.cover.style.visibility = 'visible';
-        const art = item.album?.images?.[1]?.url || item.album?.images?.[0]?.url;
-        els.cover.src = art || '';
-        els.nowTitle.textContent = item.name || 'Unknown';
+        els.cover.style.visibility = "visible";
+        const art =
+          item.album?.images?.[1]?.url || item.album?.images?.[0]?.url;
+        els.cover.src = art || "";
+        els.nowTitle.textContent = item.name || "Unknown";
         const remain = item.duration_ms - (progress_ms || 0);
         const artists = artistsToString(item.artists);
         // Build subtitle with SVG icon without using innerHTML to keep text safe
-        els.nowSubtitle.textContent = '';
-        els.nowSubtitle.append(document.createTextNode(`${artists} • ${msToClock(item.duration_ms)} • `));
-        els.nowSubtitle.appendChild(createIconSVG(is_playing ? 'play' : 'pause', 14));
-        els.nowSubtitle.append(document.createTextNode(` ${msToClock(remain)} left`));
+        els.nowSubtitle.textContent = "";
+        els.nowSubtitle.append(
+          document.createTextNode(
+            `${artists} • ${msToClock(item.duration_ms)} • `
+          )
+        );
+        els.nowSubtitle.appendChild(
+          createIconSVG(is_playing ? "play" : "pause", 14)
+        );
+        els.nowSubtitle.append(
+          document.createTextNode(` ${msToClock(remain)} left`)
+        );
       }
 
       function setHeaderToUpcoming() {
         const nxt = upNextCache;
         if (!nxt) return;
-        els.cover.style.visibility = 'visible';
+        els.cover.style.visibility = "visible";
         const art = nxt.album?.images?.[1]?.url || nxt.album?.images?.[0]?.url;
-        els.cover.src = art || '';
-        els.nowTitle.textContent = nxt.name || 'Unknown';
+        els.cover.src = art || "";
+        els.nowTitle.textContent = nxt.name || "Unknown";
         const artists = artistsToString(nxt.artists);
         // Indicate it's the next track but show it prominently
         els.nowSubtitle.textContent = `${artists} • ⏭ Up next`;
@@ -576,7 +790,7 @@
         } finally {
           inBetweenPause = false;
           stopCountdown();
-          setBigButton(ICON_PAUSE, 'Playing');
+          setBigButton(ICON_PAUSE, "Playing");
           // Schedule a quick poll to refresh UI/state shortly after resume
           schedulePollIn(1000);
         }
@@ -587,12 +801,12 @@
         countdownTimer = setInterval(async () => {
           if (!inBetweenPause) return stopCountdown();
           if (els.permanent.checked) {
-            setBigButton(ICON_PAUSE, 'Paused');
+            setBigButton(ICON_PAUSE, "Paused");
             return;
           }
           const ms = Math.max(0, (resumeAt || 0) - Date.now());
           const s = Math.ceil(ms / 1000);
-          setBigButton(ICON_PLAY, 'Resuming soon', String(s));
+          setBigButton(ICON_PLAY, "Resuming soon", String(s));
           if (ms <= 0) {
             await resumePlaybackNow();
           }
@@ -603,7 +817,10 @@
         countdownTimer = null;
       }
 
-      function clearPauseSchedule() { if (pauseScheduleTimer) clearTimeout(pauseScheduleTimer); pauseScheduleTimer = null; }
+      function clearPauseSchedule() {
+        if (pauseScheduleTimer) clearTimeout(pauseScheduleTimer);
+        pauseScheduleTimer = null;
+      }
 
       async function schedulePauseIfNeeded(playback) {
         clearPauseSchedule();
@@ -628,7 +845,9 @@
               startCountdown();
               // Immediately refresh upcoming using current playback context to avoid showing next-to-next
               let pb2 = null;
-              try { pb2 = await getPlayback(); } catch {}
+              try {
+                pb2 = await getPlayback();
+              } catch {}
               await updateUpcoming(pb2 || undefined);
               if (upNextCache) setHeaderToUpcoming();
               // Refresh state shortly after pausing
@@ -651,11 +870,11 @@
           }
           upNextCache = candidate || null;
           // Hide separate 'up next' text; show in header during pause instead
-          setUpcoming('');
+          setUpcoming("");
           if (inBetweenPause && upNextCache) setHeaderToUpcoming();
         } catch {
           upNextCache = null;
-          setUpcoming('');
+          setUpcoming("");
         }
       }
 
@@ -664,9 +883,9 @@
         try {
           const playback = await getPlayback();
           if (!playback) {
-            setStatus('No active device. Start Spotify on a device.');
+            setStatus("No active device. Start Spotify on a device.");
             setNowPlaying(null);
-            setBigButton(ICON_PLAY, 'Ready');
+            setBigButton(ICON_PLAY, "Ready");
             inBetweenPause = false;
             stopCountdown();
             return 5_000;
@@ -681,7 +900,7 @@
 
           if (is_playing) {
             // Normal play: ensure UI shows Pause icon
-            setBigButton(ICON_PAUSE, 'Playing');
+            setBigButton(ICON_PAUSE, "Playing");
             inBetweenPause = false;
             stopCountdown();
             await schedulePauseIfNeeded(playback);
@@ -694,14 +913,14 @@
               if (upNextCache) setHeaderToUpcoming();
             } else {
               // User manually paused; reflect state.
-              setBigButton(ICON_PLAY, 'Paused');
+              setBigButton(ICON_PLAY, "Paused");
             }
           }
 
           // Fixed-interval polling
           return 5_000;
         } catch (e) {
-          setStatus('Playback check failed. Retrying…');
+          setStatus("Playback check failed. Retrying…");
           return 5_000;
         }
       }
@@ -713,18 +932,18 @@
       }
 
       // ----- Events -----
-      els.loginBtn.addEventListener('click', startAuth);
-      els.logoutBtn.addEventListener('click', () => {
-        localStorage.removeItem('sp_token');
+      els.loginBtn.addEventListener("click", startAuth);
+      els.logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("sp_token");
         token = null;
         if (refreshTimer) clearTimeout(refreshTimer);
         if (pollTimer) clearTimeout(pollTimer);
         clearPauseSchedule();
         stopCountdown();
-        setStatus('Signed out.');
-        els.logoutBtn.style.display = 'none';
+        setStatus("Signed out.");
+        els.logoutBtn.style.display = "none";
         setSignedInUI(false);
-        setBigButton(ICON_PLAY, 'Ready');
+        setBigButton(ICON_PLAY, "Ready");
       });
 
       // ----- Multi-tab detection (same browser) -----
@@ -732,32 +951,42 @@
       let tabBeatTimer = null;
       let currentTabCount = 1;
       function getRegistry() {
-        try { return JSON.parse(localStorage.getItem(TAB_REG_KEY) || '{}') || {}; } catch { return {}; }
+        try {
+          return JSON.parse(localStorage.getItem(TAB_REG_KEY) || "{}") || {};
+        } catch {
+          return {};
+        }
       }
       function setRegistry(obj) {
-        try { localStorage.setItem(TAB_REG_KEY, JSON.stringify(obj)); } catch {}
+        try {
+          localStorage.setItem(TAB_REG_KEY, JSON.stringify(obj));
+        } catch {}
       }
       function pruneRegistry(reg) {
         const now = Date.now();
         const out = {};
         for (const [k, v] of Object.entries(reg || {})) {
-          if (typeof v === 'number' && now - v <= 6000) out[k] = v; // 6s stale window
+          if (typeof v === "number" && now - v <= 6000) out[k] = v; // 6s stale window
         }
         return out;
       }
       function updateMultiTabWarning(count) {
         currentTabCount = count;
         const show = count > 1;
-        const msg = 'Warning: Pauser is open in multiple tabs. Close other tabs to avoid conflicts.';
+        const msg =
+          "Warning: Pauser is open in multiple tabs. Close other tabs to avoid conflicts.";
         if (els.multiWarn) {
-          const signedIn = document.getElementById('appControls').style.display !== 'none';
-          els.multiWarn.style.display = show && signedIn ? 'block' : 'none';
-          els.multiWarn.textContent = show && signedIn ? msg : '';
+          const signedIn =
+            document.getElementById("appControls").style.display !== "none";
+          els.multiWarn.style.display = show && signedIn ? "block" : "none";
+          els.multiWarn.textContent = show && signedIn ? msg : "";
         }
         if (els.multiWarnIntro) {
-          const signedOut = document.getElementById('intro').style.display !== 'none';
-          els.multiWarnIntro.style.display = show && signedOut ? 'block' : 'none';
-          els.multiWarnIntro.textContent = show && signedOut ? msg : '';
+          const signedOut =
+            document.getElementById("intro").style.display !== "none";
+          els.multiWarnIntro.style.display =
+            show && signedOut ? "block" : "none";
+          els.multiWarnIntro.textContent = show && signedOut ? msg : "";
         }
       }
       function heartbeatOnce() {
@@ -779,53 +1008,70 @@
         if (tabId) delete reg[tabId];
         setRegistry(reg);
       }
-      window.addEventListener('storage', (e) => {
+      window.addEventListener("storage", (e) => {
         if (e.key === TAB_REG_KEY) {
           const reg = pruneRegistry(getRegistry());
           updateMultiTabWarning(Object.keys(reg).length);
         }
       });
-      window.addEventListener('beforeunload', stopHeartbeat);
-      function isFullscreen() { return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement); }
+      window.addEventListener("beforeunload", stopHeartbeat);
+      function isFullscreen() {
+        return !!(
+          document.fullscreenElement ||
+          document.webkitFullscreenElement ||
+          document.msFullscreenElement
+        );
+      }
       function updateFullscreenBtnLabel() {
         if (!els.fullscreenBtn) return;
-        els.fullscreenBtn.textContent = isFullscreen() ? 'Exit Fullscreen' : 'Fullscreen';
+        els.fullscreenBtn.textContent = isFullscreen()
+          ? "Exit Fullscreen"
+          : "Fullscreen";
       }
       async function toggleFullscreen() {
         try {
           if (!isFullscreen()) {
             const el = document.documentElement;
             if (el.requestFullscreen) await el.requestFullscreen();
-            else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+            else if (el.webkitRequestFullscreen)
+              await el.webkitRequestFullscreen();
             else if (el.msRequestFullscreen) await el.msRequestFullscreen();
           } else {
             if (document.exitFullscreen) await document.exitFullscreen();
-            else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
-            else if (document.msExitFullscreen) await document.msExitFullscreen();
+            else if (document.webkitExitFullscreen)
+              await document.webkitExitFullscreen();
+            else if (document.msExitFullscreen)
+              await document.msExitFullscreen();
           }
         } catch (e) {
-          setStatus('Fullscreen not available.', true);
+          setStatus("Fullscreen not available.", true);
         } finally {
           updateFullscreenBtnLabel();
         }
       }
       if (els.fullscreenBtn) {
-        els.fullscreenBtn.addEventListener('click', toggleFullscreen);
-        document.addEventListener('fullscreenchange', updateFullscreenBtnLabel);
-        document.addEventListener('webkitfullscreenchange', updateFullscreenBtnLabel);
-        document.addEventListener('msfullscreenchange', updateFullscreenBtnLabel);
+        els.fullscreenBtn.addEventListener("click", toggleFullscreen);
+        document.addEventListener("fullscreenchange", updateFullscreenBtnLabel);
+        document.addEventListener(
+          "webkitfullscreenchange",
+          updateFullscreenBtnLabel
+        );
+        document.addEventListener(
+          "msfullscreenchange",
+          updateFullscreenBtnLabel
+        );
       }
-      els.permanent.addEventListener('change', () => {
+      els.permanent.addEventListener("change", () => {
         els.delay.disabled = els.permanent.checked;
         savePermanentPref();
       });
-      els.delay.addEventListener('change', () => {
+      els.delay.addEventListener("change", () => {
         // Normalize and persist
         const n = getDelaySec();
         els.delay.value = String(n);
         saveDelayPref();
       });
-      els.toggleBtn.addEventListener('click', async () => {
+      els.toggleBtn.addEventListener("click", async () => {
         try {
           const playback = await getPlayback();
           if (!playback) return;
@@ -834,20 +1080,20 @@
             await startPlayback();
             inBetweenPause = false;
             stopCountdown();
-            setBigButton(ICON_PAUSE, 'Playing');
+            setBigButton(ICON_PAUSE, "Playing");
             schedulePollIn(1000);
             return;
           }
           if (playback.is_playing) {
             await pausePlayback();
-              setBigButton(ICON_PLAY, 'Paused');
+            setBigButton(ICON_PLAY, "Paused");
           } else {
             await startPlayback();
-            setBigButton(ICON_PAUSE, 'Playing');
+            setBigButton(ICON_PAUSE, "Playing");
           }
           schedulePollIn(1000);
         } catch (e) {
-          setStatus('Action failed. Ensure Spotify is open.', true);
+          setStatus("Action failed. Ensure Spotify is open.", true);
         }
       });
 
@@ -858,10 +1104,10 @@
 
         // Handle auth redirect
         const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
-        const error = params.get('error');
+        const code = params.get("code");
+        const error = params.get("error");
         if (error) {
-          setStatus('Authorization failed: ' + error, true);
+          setStatus("Authorization failed: " + error, true);
         }
         if (code) {
           try {
@@ -869,7 +1115,7 @@
             // Cleanup URL
             history.replaceState({}, document.title, REDIRECT_URI);
           } catch (e) {
-            setStatus('Token exchange failed.', true);
+            setStatus("Token exchange failed.", true);
           }
         } else {
           // Load any existing token
@@ -884,13 +1130,13 @@
         loadPrefs();
 
         if (token) {
-          setStatus('Connected.');
+          setStatus("Connected.");
           setSignedInUI(true);
           pollLoop();
         } else {
-          setStatus('Connect to Spotify to begin.');
+          setStatus("Connect to Spotify to begin.");
           setSignedInUI(false);
-          els.logoutBtn.style.display = 'none';
+          els.logoutBtn.style.display = "none";
         }
         // Start multi-tab heartbeat regardless of auth state
         startHeartbeat();
