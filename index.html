@@ -488,6 +488,9 @@
       let plannedPauseAt = null; // epoch ms when pause timeout planned to fire
       let plannedPauseTrackId = null; // track id associated with scheduled pause
       let countdownLast = null; // last whole-second value shown on button
+      // Track tail suppression: avoid re-pausing the same track right after resume
+      let lastEndPausedTrackId = null;
+      let suppressPauseForTrackId = null;
       // Status tracking for auto-reset from error
       let statusErrorAt = 0;
       let statusIsError = false;
@@ -831,6 +834,14 @@
           setBigButton(ICON_PAUSE, "Playing");
           // Schedule a quick poll to refresh UI/state shortly after resume
           schedulePollIn(1000);
+          // Clear any stale planned pause markers; we've moved on
+          plannedPauseAt = null; plannedPauseTrackId = null;
+          // Suppress re-pausing for the same track tail after resume
+          if (lastEndPausedTrackId) {
+            suppressPauseForTrackId = lastEndPausedTrackId;
+            log('resumePlaybackNow: suppress future end-pause for track tail', { suppressPauseForTrackId });
+          }
+          lastEndPausedTrackId = null;
           resumeInFlight = false;
         }
       }
@@ -876,6 +887,12 @@
         const duration = item?.duration_ms ?? 0;
         const remaining = Math.max(0, duration - progress);
         if (!item || !playback?.is_playing) { log('schedulePauseIfNeeded: nothing to schedule', { hasItem: !!item, is_playing: playback?.is_playing }); return; }
+        // If we just resumed and are finishing the tail of the same track we paused earlier,
+        // do not schedule another end pause for it.
+        if (suppressPauseForTrackId && item?.id === suppressPauseForTrackId) {
+          log('schedulePauseIfNeeded: suppressed for resumed tail of track', { id: item?.id, remaining });
+          return;
+        }
 
         // If remaining time is short, plan a precise pause just before the track ends.
         if (remaining <= 15_000) {
@@ -890,6 +907,8 @@
               await pausePlayback();
               inBetweenPause = true;
               log('paused at end-of-track, entering between-pause state');
+              // Remember which track we paused so we can suppress re-pausing its tail after resume
+              if (!lastEndPausedTrackId) { lastEndPausedTrackId = plannedPauseTrackId || item?.id || null; }
               if (!els.permanent.checked) {
                 resumeAt = Date.now() + getDelaySec() * 1000;
               } else {
