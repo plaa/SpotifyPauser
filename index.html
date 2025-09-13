@@ -209,6 +209,7 @@
         <div id="upnext" class="upnext"></div>
         <div id="status" class="status"></div>
         <div class="auth">
+          <button id="fullscreenBtn" class="btn" style="display:none">Fullscreen</button>
           <button id="logoutBtn" class="btn" style="display:none">Sign out</button>
         </div>
       </div>
@@ -264,7 +265,8 @@
         upnext: document.getElementById('upnext'),
         status: document.getElementById('status'),
         loginBtn: document.getElementById('loginBtn'),
-        logoutBtn: document.getElementById('logoutBtn')
+        logoutBtn: document.getElementById('logoutBtn'),
+        fullscreenBtn: document.getElementById('fullscreenBtn')
       };
 
 
@@ -306,6 +308,7 @@
         document.getElementById('appHeader').style.display = on ? 'flex' : 'none';
         document.getElementById('appControls').style.display = on ? 'grid' : 'none';
         document.getElementById('intro').style.display = on ? 'none' : 'block';
+        if (els.fullscreenBtn) els.fullscreenBtn.style.display = on ? 'inline-block' : 'none';
       }
 
       function isValidClientId(s) {
@@ -674,6 +677,35 @@
         setSignedInUI(false);
         setBigButton(ICON_PLAY, 'Ready');
       });
+      function isFullscreen() { return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement); }
+      function updateFullscreenBtnLabel() {
+        if (!els.fullscreenBtn) return;
+        els.fullscreenBtn.textContent = isFullscreen() ? 'Exit Fullscreen' : 'Fullscreen';
+      }
+      async function toggleFullscreen() {
+        try {
+          if (!isFullscreen()) {
+            const el = document.documentElement;
+            if (el.requestFullscreen) await el.requestFullscreen();
+            else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+            else if (el.msRequestFullscreen) await el.msRequestFullscreen();
+          } else {
+            if (document.exitFullscreen) await document.exitFullscreen();
+            else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+            else if (document.msExitFullscreen) await document.msExitFullscreen();
+          }
+        } catch (e) {
+          setStatus('Fullscreen not available.', true);
+        } finally {
+          updateFullscreenBtnLabel();
+        }
+      }
+      if (els.fullscreenBtn) {
+        els.fullscreenBtn.addEventListener('click', toggleFullscreen);
+        document.addEventListener('fullscreenchange', updateFullscreenBtnLabel);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenBtnLabel);
+        document.addEventListener('msfullscreenchange', updateFullscreenBtnLabel);
+      }
       els.permanent.addEventListener('change', () => {
         els.delay.disabled = els.permanent.checked;
         savePermanentPref();
