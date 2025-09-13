@@ -858,7 +858,7 @@
 
         // If remaining time is short, plan a precise pause just before the track ends.
         if (remaining <= 15_000) {
-          const triggerIn = Math.max(120, remaining - 700); // try ~0.7s before end
+          const triggerIn = Math.max(120, remaining - 1000); // try ~1.0s before end
           plannedPauseAt = Date.now() + triggerIn;
           plannedPauseTrackId = item?.id || null;
           log('schedulePauseIfNeeded: scheduling pause', { track: item?.name, id: item?.id, progress, duration, remaining, triggerIn, plannedPauseAt });
@@ -931,6 +931,38 @@
           }
 
           const { is_playing, item, progress_ms } = playback;
+          // Catch-up: if a pause was planned for the previous track but Spotify has already
+          // advanced to the next track, pause immediately at the beginning of the new track
+          // (within a small window) to emulate end-of-track pause.
+          if (!inBetweenPause && plannedPauseTrackId && item?.id && plannedPauseTrackId !== item.id) {
+            const nearStart = (progress_ms ?? 0) <= 1500;
+            if (nearStart) {
+              log('catch-up pause: track advanced before scheduled pause; pausing at start of next track', { prev: plannedPauseTrackId, now: item.id, progress_ms });
+              try {
+                pauseInFlight = true;
+                await pausePlayback();
+                inBetweenPause = true;
+                if (!els.permanent.checked) {
+                  resumeAt = Date.now() + getDelaySec() * 1000;
+                } else {
+                  resumeAt = null;
+                }
+                startCountdown();
+                await updateUpcoming(playback);
+                if (upNextCache) setHeaderToUpcoming();
+                schedulePollIn(1000);
+              } finally {
+                pauseInFlight = false;
+              }
+              // Reset planned markers after catch-up
+              plannedPauseAt = null; plannedPauseTrackId = null;
+              log('catch-up pause applied');
+              return 1000;
+            } else {
+              log('catch-up: track advanced but not near start; clear planned', { prev: plannedPauseTrackId, now: item.id, progress_ms });
+              plannedPauseAt = null; plannedPauseTrackId = null;
+            }
+          }
           if (inBetweenPause && upNextCache) {
             setHeaderToUpcoming();
           } else {
