@@ -155,6 +155,8 @@
         justify-content: center;
         margin: 20px 0 10px;
       }
+      .brand { display: flex; justify-content: center; margin: 12px 0; }
+      .brand img { width: 160px; height: auto; }
       /* Intro panel text layout */
       .intro { padding-top: 32px; }
       .intro p { max-width: 480px; margin: 0 auto 16px; }
@@ -179,6 +181,7 @@
       @media (max-width: 420px) {
         .big-btn { width: 180px; height: 180px; --icon-size: 72px; }
         .big-sub { font-size: 16px; }
+        .brand img { width: 140px; }
       }
     </style>
   </head>
@@ -214,6 +217,7 @@
           <button id="fullscreenBtn" class="btn" style="display:none">Fullscreen</button>
           <button id="logoutBtn" class="btn" style="display:none">Sign out</button>
         </div>
+        <div class="brand"><a href="https://www.spotify.com/" target="_blank" rel="noopener"><img src="spotify.svg" alt="Spotify" /></a></div>
       </div>
 
       <div id="intro" class="panel intro" style="display:block;">
@@ -235,6 +239,7 @@
           <button id="loginBtn" class="btn accent">Connect to Spotify</button>
         </div>
         <div id="statusIntro" class="status" aria-live="polite"></div>
+        <div class="brand"><a href="https://www.spotify.com/" target="_blank" rel="noopener"><img src="spotify.svg" alt="Spotify" /></a></div>
       </div>
 
       <footer>
