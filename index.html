@@ -400,6 +400,17 @@
         "user-modify-playback-state",
         "user-read-currently-playing",
       ];
+      // Debug logging helper
+      const DEBUG_LOG = true;
+      const __t0 = (typeof performance !== "undefined" && performance.now)
+        ? performance.now() : Date.now();
+      function log(...args) {
+        if (!DEBUG_LOG || !window.console) return;
+        const now = (typeof performance !== "undefined" && performance.now)
+          ? performance.now() : Date.now();
+        const t = ((now - __t0) / 1000).toFixed(3);
+        try { console.log(`[${t}s]`, ...args); } catch {}
+      }
       // Inline SVG icons to avoid platform emoji styling
       const ICON_PLAY =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>';
@@ -460,12 +471,19 @@
       let inBetweenPause = false;
       let resumeAt = null;
       let upNextCache = null; // cache next queue item during pause
+      // Diagnostics for scheduling
+      let plannedPauseAt = null; // epoch ms when pause timeout planned to fire
+      let plannedPauseTrackId = null; // track id associated with scheduled pause
+      let countdownLast = null; // last whole-second value shown on button
 
       // Preference keys
       const PREF_DELAY_SECS = "sp_pref_delay_secs";
       const PREF_PERMANENT = "sp_pref_permanent";
       const PREF_CLIENT_ID = "sp_client_id";
       const TAB_REG_KEY = "sp_tab_registry";
+      // Control flow guards
+      let pauseInFlight = false; // true when an end-of-track pause request is in flight
+      let resumeInFlight = false; // true when a resume (play) request is in flight
 
       function loadPrefs() {
         const delayRaw = localStorage.getItem(PREF_DELAY_SECS);
@@ -488,6 +506,7 @@
       }
 
       function setSignedInUI(on) {
+        log('setSignedInUI', { on });
         document.getElementById("appHeader").style.display = on
           ? "flex"
           : "none";
@@ -682,6 +701,7 @@
 
       // ----- Spotify API helpers -----
       async function apiFetch(path, options = {}) {
+        log('API request', path, options?.method || 'GET');
         const at = await getAccessToken();
         if (!at) throw new Error("Not authorized");
         const res = await fetch(`https://api.spotify.com/v1${path}`, {
@@ -692,27 +712,18 @@
             ...(options.headers || {}),
           },
         });
-        if (res.status === 204) return null;
+        // Control endpoints may return 204 or 202 with empty body
+        if (res.status === 204 || res.status === 202) return null;
         if (!res.ok) throw new Error(`API ${res.status}`);
-        return res.json();
-      }
-      async function getPlayback() {
-        return apiFetch("/me/player");
-      }
-      async function pausePlayback() {
-        try {
-          await apiFetch("/me/player/pause", { method: "PUT" });
-        } catch (e) {
-          /* ignore */
+        const text = await res.text();
+        try { return text ? JSON.parse(text) : null; } catch (e) {
+          log('Non-JSON response tolerated for', path, 'status', res.status);
+          return null;
         }
       }
-      async function startPlayback() {
-        try {
-          await apiFetch("/me/player/play", { method: "PUT" });
-        } catch (e) {
-          /* ignore */
-        }
-      }
+      async function getPlayback() { const r = await apiFetch("/me/player"); return r; }
+      async function pausePlayback() { try { log('Pause requested'); await apiFetch("/me/player/pause", { method: "PUT" }); log('Pause request sent'); } catch (e) { log('Pause request error', e); } }
+      async function startPlayback() { try { log('Play requested'); await apiFetch("/me/player/play", { method: "PUT" }); log('Play request sent'); } catch (e) { log('Play request error', e); } }
       async function getQueue() {
         return apiFetch("/me/player/queue");
       }
@@ -733,6 +744,7 @@
         els.upnext.textContent = text || "";
       }
       function setNowPlaying(item, progress_ms, is_playing) {
+        log('UI setNowPlaying', { track: item?.name, id: item?.id, progress_ms, duration_ms: item?.duration_ms, is_playing });
         if (!item) {
           els.cover.src = "";
           els.cover.style.visibility = "hidden";
@@ -765,6 +777,7 @@
       function setHeaderToUpcoming() {
         const nxt = upNextCache;
         if (!nxt) return;
+        log('UI setHeaderToUpcoming', { track: nxt?.name, id: nxt?.id });
         els.cover.style.visibility = "visible";
         const art = nxt.album?.images?.[1]?.url || nxt.album?.images?.[0]?.url;
         els.cover.src = art || "";
@@ -782,9 +795,13 @@
       function schedulePollIn(ms) {
         if (pollTimer) clearTimeout(pollTimer);
         pollTimer = setTimeout(pollLoop, ms);
+        log('poll scheduled in', ms, 'ms');
       }
 
       async function resumePlaybackNow() {
+        if (resumeInFlight) { log('resumePlaybackNow: ignored, resume already in flight'); return; }
+        resumeInFlight = true;
+        log('resumePlaybackNow called', { inBetweenPause, resumeAt });
         try {
           await startPlayback();
         } finally {
@@ -793,10 +810,12 @@
           setBigButton(ICON_PAUSE, "Playing");
           // Schedule a quick poll to refresh UI/state shortly after resume
           schedulePollIn(1000);
+          resumeInFlight = false;
         }
       }
 
       function startCountdown() {
+        log('startCountdown', { resumeAt, permanent: els.permanent.checked });
         stopCountdown();
         countdownTimer = setInterval(async () => {
           if (!inBetweenPause) return stopCountdown();
@@ -806,8 +825,10 @@
           }
           const ms = Math.max(0, (resumeAt || 0) - Date.now());
           const s = Math.ceil(ms / 1000);
+          if (s !== countdownLast) { countdownLast = s; log('countdown', s, 's remaining'); }
           setBigButton(ICON_PLAY, "Resuming soon", String(s));
           if (ms <= 0) {
+            log('countdown reached zero, resuming');
             await resumePlaybackNow();
           }
         }, 200);
@@ -815,10 +836,15 @@
       function stopCountdown() {
         if (countdownTimer) clearInterval(countdownTimer);
         countdownTimer = null;
+        countdownLast = null;
+        log('stopCountdown');
       }
 
       function clearPauseSchedule() {
-        if (pauseScheduleTimer) clearTimeout(pauseScheduleTimer);
+        if (pauseScheduleTimer) {
+          clearTimeout(pauseScheduleTimer);
+          log('cleared scheduled pause', { plannedPauseAt, plannedPauseTrackId });
+        }
         pauseScheduleTimer = null;
       }
 
@@ -828,15 +854,21 @@
         const progress = playback?.progress_ms ?? 0;
         const duration = item?.duration_ms ?? 0;
         const remaining = Math.max(0, duration - progress);
-        if (!item || !playback?.is_playing) return;
+        if (!item || !playback?.is_playing) { log('schedulePauseIfNeeded: nothing to schedule', { hasItem: !!item, is_playing: playback?.is_playing }); return; }
 
         // If remaining time is short, plan a precise pause just before the track ends.
         if (remaining <= 15_000) {
           const triggerIn = Math.max(120, remaining - 700); // try ~0.7s before end
+          plannedPauseAt = Date.now() + triggerIn;
+          plannedPauseTrackId = item?.id || null;
+          log('schedulePauseIfNeeded: scheduling pause', { track: item?.name, id: item?.id, progress, duration, remaining, triggerIn, plannedPauseAt });
           pauseScheduleTimer = setTimeout(async () => {
+            log('scheduled pause firing', { plannedPauseAt, now: Date.now(), plannedPauseTrackId });
             try {
+              pauseInFlight = true;
               await pausePlayback();
               inBetweenPause = true;
+              log('paused at end-of-track, entering between-pause state');
               if (!els.permanent.checked) {
                 resumeAt = Date.now() + getDelaySec() * 1000;
               } else {
@@ -854,8 +886,12 @@
               schedulePollIn(1000);
             } catch (e) {
               // ignore
+              log('scheduled pause error', e);
             }
           }, triggerIn);
+        } else {
+          plannedPauseAt = null; plannedPauseTrackId = null;
+          log('schedulePauseIfNeeded: not within 15s window', { remaining });
         }
       }
 
@@ -869,6 +905,7 @@
             if (atStart) candidate = playbackCtx.item; // Spotify already advanced to next and paused at start
           }
           upNextCache = candidate || null;
+          log('updateUpcoming', { inBetweenPause, playbackTrack: playbackCtx?.item?.name, playbackProgress: playbackCtx?.progress_ms, queueFirst: nxt?.name, chosen: upNextCache?.name });
           // Hide separate 'up next' text; show in header during pause instead
           setUpcoming("");
           if (inBetweenPause && upNextCache) setHeaderToUpcoming();
@@ -879,9 +916,11 @@
       }
 
       async function pollOnce() {
+        log('pollOnce start');
         if (!token) return;
         try {
           const playback = await getPlayback();
+          log('pollOnce playback', { is_playing: playback?.is_playing, track: playback?.item?.name, id: playback?.item?.id, progress_ms: playback?.progress_ms, duration_ms: playback?.item?.duration_ms });
           if (!playback) {
             setStatus("No active device. Start Spotify on a device.");
             setNowPlaying(null);
@@ -900,10 +939,17 @@
 
           if (is_playing) {
             // Normal play: ensure UI shows Pause icon
-            setBigButton(ICON_PAUSE, "Playing");
-            inBetweenPause = false;
-            stopCountdown();
-            await schedulePauseIfNeeded(playback);
+            const closeToPlanned = plannedPauseAt && Math.abs(Date.now() - plannedPauseAt) <= 1500;
+            if (pauseInFlight || closeToPlanned) {
+              // A scheduled pause is in flight; don't clear countdown or state
+              setBigButton(ICON_PAUSE, "Pausing…");
+              log('pollOnce: playing but pauseInFlight/closeToPlanned, keeping between-pause state');
+            } else {
+              setBigButton(ICON_PAUSE, "Playing");
+              inBetweenPause = false;
+              stopCountdown();
+              await schedulePauseIfNeeded(playback);
+            }
           } else {
             // Paused. If we're in between songs (we paused), handle resume.
             if (inBetweenPause) {
@@ -911,6 +957,20 @@
               startCountdown();
               await updateUpcoming(playback);
               if (upNextCache) setHeaderToUpcoming();
+              pauseInFlight = false;
+            } else if (pauseInFlight) {
+              // We initiated a pause and now device reports paused; promote to between-pause state
+              log('pollOnce: paused with pauseInFlight, promoting to inBetweenPause');
+              inBetweenPause = true;
+              if (!els.permanent.checked) {
+                if (!resumeAt) resumeAt = Date.now() + getDelaySec() * 1000;
+              } else {
+                resumeAt = null;
+              }
+              startCountdown();
+              await updateUpcoming(playback);
+              if (upNextCache) setHeaderToUpcoming();
+              pauseInFlight = false;
             } else {
               // User manually paused; reflect state.
               setBigButton(ICON_PLAY, "Paused");
@@ -918,9 +978,11 @@
           }
 
           // Fixed-interval polling
+          log('pollOnce end: scheduling next poll in 5000ms');
           return 5_000;
         } catch (e) {
           setStatus("Playback check failed. Retrying…");
+          log('pollOnce error', e);
           return 5_000;
         }
       }
@@ -929,6 +991,7 @@
         if (pollTimer) clearTimeout(pollTimer);
         const nextIn = await pollOnce();
         pollTimer = setTimeout(pollLoop, nextIn);
+        log('pollLoop scheduled next', nextIn, 'ms');
       }
 
       // ----- Events -----
@@ -1072,21 +1135,19 @@
         saveDelayPref();
       });
       els.toggleBtn.addEventListener("click", async () => {
+        log('toggleBtn clicked');
         try {
           const playback = await getPlayback();
+          log('toggleBtn current playback', { is_playing: playback?.is_playing, track: playback?.item?.name, id: playback?.item?.id });
           if (!playback) return;
           if (inBetweenPause) {
-            // If in scheduled pause, act as immediate resume
-            await startPlayback();
-            inBetweenPause = false;
-            stopCountdown();
-            setBigButton(ICON_PAUSE, "Playing");
-            schedulePollIn(1000);
+            // If in scheduled pause, act as immediate resume (guarded)
+            await resumePlaybackNow();
             return;
           }
           if (playback.is_playing) {
             await pausePlayback();
-            setBigButton(ICON_PLAY, "Paused");
+              setBigButton(ICON_PLAY, "Paused");
           } else {
             await startPlayback();
             setBigButton(ICON_PAUSE, "Playing");
@@ -1094,6 +1155,7 @@
           schedulePollIn(1000);
         } catch (e) {
           setStatus("Action failed. Ensure Spotify is open.", true);
+          log('toggleBtn action error', e);
         }
       });
 
