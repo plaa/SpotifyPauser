@@ -613,7 +613,11 @@
                 resumeAt = null;
               }
               startCountdown();
-              await updateUpcoming();
+              // Immediately refresh upcoming using current playback context to avoid showing next-to-next
+              let pb2 = null;
+              try { pb2 = await getPlayback(); } catch {}
+              await updateUpcoming(pb2 || undefined);
+              if (upNextCache) setHeaderToUpcoming();
               // Refresh state shortly after pausing
               schedulePollIn(1000);
             } catch (e) {
@@ -623,11 +627,16 @@
         }
       }
 
-      async function updateUpcoming() {
+      async function updateUpcoming(playbackCtx = null) {
         try {
           const q = await getQueue();
-          const nxt = q?.queue?.[0];
-          upNextCache = nxt || null;
+          const nxt = q?.queue?.[0] || null;
+          let candidate = nxt;
+          if (inBetweenPause && playbackCtx?.item) {
+            const atStart = (playbackCtx.progress_ms ?? 0) <= 3000; // within first 3s
+            if (atStart) candidate = playbackCtx.item; // Spotify already advanced to next and paused at start
+          }
+          upNextCache = candidate || null;
           // Hide separate 'up next' text; show in header during pause instead
           setUpcoming('');
           if (inBetweenPause && upNextCache) setHeaderToUpcoming();
@@ -668,7 +677,7 @@
             if (inBetweenPause) {
               // Keep countdown fresh and show next on header.
               startCountdown();
-              await updateUpcoming();
+              await updateUpcoming(playback);
               if (upNextCache) setHeaderToUpcoming();
             } else {
               // User manually paused; reflect state.
