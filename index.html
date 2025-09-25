@@ -973,6 +973,32 @@
           }
 
           const { is_playing, item, progress_ms } = playback;
+
+          // When resuming a track tail we intentionally suppress pausing it again.
+          // During that short tail window (~1s) avoid flashing the old track in the UI
+          // and keep polling quickly until Spotify advances to the next item.
+          let finishingSuppressedTail = false;
+          if (
+            !inBetweenPause &&
+            suppressPauseForTrackId &&
+            item?.id === suppressPauseForTrackId &&
+            is_playing
+          ) {
+            const duration = item?.duration_ms ?? 0;
+            const progress = progress_ms ?? 0;
+            if (duration > 0) {
+              const remaining = Math.max(0, duration - progress);
+              if (remaining <= 1_500) {
+                finishingSuppressedTail = true;
+                log('pollOnce: finishing suppressed tail, deferring now playing update', {
+                  track: item?.name,
+                  id: item?.id,
+                  remaining,
+                });
+              }
+            }
+          }
+
           // Catch-up: if a pause was planned for the previous track but Spotify has already
           // advanced to the next track, pause immediately at the beginning of the new track
           // (within a small window) to emulate end-of-track pause.
@@ -1012,6 +1038,9 @@
           }
           if (inBetweenPause && upNextCache) {
             setHeaderToUpcoming();
+          } else if (finishingSuppressedTail) {
+            if (upNextCache) setHeaderToUpcoming();
+            else log('pollOnce: finishing suppressed tail but no up-next cache available');
           } else {
             setNowPlaying(item, progress_ms, is_playing);
           }
@@ -1057,14 +1086,15 @@
           }
 
           // Fixed-interval polling
-          log('pollOnce end: scheduling next poll in 5000ms');
+          const pollInterval = finishingSuppressedTail ? 1_000 : 5_000;
+          log('pollOnce end: scheduling next poll in', pollInterval, 'ms');
           // If an error was shown earlier, and we've had a successful poll for 10s,
           // restore the Connected message.
           if (statusIsError && (Date.now() - statusErrorAt) >= 10_000) {
             setStatus('Connected.');
             log('status reset to Connected after prior error');
           }
-          return 5_000;
+          return pollInterval;
         } catch (e) {
           setStatus("Playback check failed. Retrying…");
           log('pollOnce error', e);
