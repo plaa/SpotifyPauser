@@ -758,19 +758,45 @@
         log('API request', path, options?.method || 'GET');
         const at = await getAccessToken();
         if (!at) throw new Error("Not authorized");
-        const res = await fetch(`https://api.spotify.com/v1${path}`, {
-          ...options,
-          headers: {
-            Authorization: `Bearer ${at}`,
-            "Content-Type": "application/json",
-            ...(options.headers || {}),
-          },
-        });
+        let res;
+        try {
+          res = await fetch(`https://api.spotify.com/v1${path}`, {
+            ...options,
+            headers: {
+              Authorization: `Bearer ${at}`,
+              "Content-Type": "application/json",
+              ...(options.headers || {}),
+            },
+          });
+        } catch (err) {
+          const msg = `Spotify request failed: ${err?.message || 'Network error'}`;
+          setStatus(msg, true);
+          const out = new Error(msg);
+          out.name = 'NetworkError';
+          out.cause = err;
+          throw out;
+        }
         // Control endpoints may return 204 or 202 with empty body
         if (res.status === 204 || res.status === 202) return null;
-        if (!res.ok) throw new Error(`API ${res.status}`);
         const text = await res.text();
-        try { return text ? JSON.parse(text) : null; } catch (e) {
+        if (!res.ok) {
+          let spotifyMessage = null;
+          try {
+            const data = text ? JSON.parse(text) : null;
+            spotifyMessage = data?.error?.message || data?.message || null;
+          } catch {}
+          const msg = spotifyMessage
+            ? `Spotify error ${res.status}: ${spotifyMessage}`
+            : `Spotify error ${res.status}`;
+          setStatus(msg, true);
+          const err = new Error(msg);
+          err.status = res.status;
+          if (spotifyMessage) err.spotifyMessage = spotifyMessage;
+          throw err;
+        }
+        try {
+          return text ? JSON.parse(text) : null;
+        } catch (e) {
           log('Non-JSON response tolerated for', path, 'status', res.status);
           return null;
         }
@@ -1152,7 +1178,8 @@
           }
           return pollInterval;
         } catch (e) {
-          setStatus("Playback check failed. Retrying…");
+          const msg = e?.message || "Playback check failed. Retrying…";
+          setStatus(msg, true);
           log('pollOnce error', e);
           return 5_000;
         }
