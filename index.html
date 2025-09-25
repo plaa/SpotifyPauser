@@ -481,6 +481,8 @@
       let pollTimer = null;
       let pauseScheduleTimer = null;
       let countdownTimer = null;
+      let nowPlayingTicker = null;
+      let nowPlayingState = null; // { trackId, duration_ms, progress_ms, remainingEl, lastTs }
       let inBetweenPause = false;
       let resumeAt = null;
       let upNextCache = null; // cache next queue item during pause
@@ -503,6 +505,39 @@
       // Control flow guards
       let pauseInFlight = false; // true when an end-of-track pause request is in flight
       let resumeInFlight = false; // true when a resume (play) request is in flight
+
+      function stopNowPlayingTicker() {
+        if (nowPlayingTicker) clearInterval(nowPlayingTicker);
+        nowPlayingTicker = null;
+        nowPlayingState = null;
+      }
+
+      function startNowPlayingTicker(state) {
+        const { trackId, duration_ms, progress_ms, remainingEl } = state || {};
+        if (!trackId || !remainingEl || !Number.isFinite(duration_ms) || duration_ms <= 0) {
+          return;
+        }
+        stopNowPlayingTicker();
+        nowPlayingState = {
+          trackId,
+          duration_ms,
+          progress_ms: Math.max(0, progress_ms || 0),
+          remainingEl,
+          lastTs: Date.now(),
+        };
+        nowPlayingTicker = setInterval(() => {
+          if (!nowPlayingState) return;
+          const now = Date.now();
+          const delta = now - nowPlayingState.lastTs;
+          nowPlayingState.lastTs = now;
+          nowPlayingState.progress_ms += delta;
+          const remaining = Math.max(0, nowPlayingState.duration_ms - nowPlayingState.progress_ms);
+          nowPlayingState.remainingEl.textContent = `${msToClock(remaining)} left`;
+          if (remaining <= 0) {
+            stopNowPlayingTicker();
+          }
+        }, 1000);
+      }
 
       function loadPrefs() {
         const delayRaw = localStorage.getItem(PREF_DELAY_SECS);
@@ -766,6 +801,7 @@
       }
       function setNowPlaying(item, progress_ms, is_playing) {
         log('UI setNowPlaying', { track: item?.name, id: item?.id, progress_ms, duration_ms: item?.duration_ms, is_playing });
+        stopNowPlayingTicker();
         if (!item) {
           els.cover.src = "";
           els.cover.style.visibility = "hidden";
@@ -786,16 +822,36 @@
         const a = document.createElement('span'); a.className = 'artists'; a.textContent = artists;
         const meta = document.createElement('span'); meta.className = 'meta';
         meta.append(document.createTextNode(' • '));
-        meta.append(document.createTextNode(msToClock(item.duration_ms)));
+        const durSpan = document.createElement('span');
+        durSpan.className = 'meta-duration';
+        durSpan.textContent = msToClock(item.duration_ms);
+        meta.appendChild(durSpan);
         meta.append(document.createTextNode(' • '));
-        meta.appendChild(createIconSVG(is_playing ? 'play' : 'pause', 14));
-        meta.append(document.createTextNode(` ${msToClock(remain)} left`));
+        const iconWrap = document.createElement('span');
+        iconWrap.className = 'meta-icon';
+        iconWrap.appendChild(createIconSVG(is_playing ? 'play' : 'pause', 14));
+        meta.appendChild(iconWrap);
+        meta.append(document.createTextNode(' '));
+        const remainingSpan = document.createElement('span');
+        remainingSpan.className = 'meta-remaining';
+        remainingSpan.textContent = `${msToClock(remain)} left`;
+        meta.appendChild(remainingSpan);
         sub.append(a, meta);
+
+        if (is_playing) {
+          startNowPlayingTicker({
+            trackId: item?.id || null,
+            duration_ms: item?.duration_ms ?? 0,
+            progress_ms: progress_ms ?? 0,
+            remainingEl: remainingSpan,
+          });
+        }
       }
 
       function setHeaderToUpcoming() {
         const nxt = upNextCache;
         if (!nxt) return;
+        stopNowPlayingTicker();
         log('UI setHeaderToUpcoming', { track: nxt?.name, id: nxt?.id });
         els.cover.style.visibility = "visible";
         const art = nxt.album?.images?.[1]?.url || nxt.album?.images?.[0]?.url;
