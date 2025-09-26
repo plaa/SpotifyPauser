@@ -522,6 +522,7 @@
           trackId,
           duration_ms,
           progress_ms: Math.max(0, progress_ms || 0),
+          initialProgress_ms: Math.max(0, progress_ms || 0),
           remainingEl,
           lastTs: Date.now(),
         };
@@ -530,7 +531,14 @@
           const now = Date.now();
           const delta = now - nowPlayingState.lastTs;
           nowPlayingState.lastTs = now;
-          nowPlayingState.progress_ms += delta;
+          const advanced = nowPlayingState.progress_ms - nowPlayingState.initialProgress_ms;
+          const maxAdvance = 6_000;
+          const allowed = Math.min(delta, Math.max(0, maxAdvance - advanced));
+          if (allowed <= 0) {
+            stopNowPlayingTicker();
+            return;
+          }
+          nowPlayingState.progress_ms += allowed;
           const remaining = Math.max(0, nowPlayingState.duration_ms - nowPlayingState.progress_ms);
           nowPlayingState.remainingEl.textContent = `${msToClock(remaining)} left`;
           if (remaining <= 0) {
